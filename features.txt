@@ -21,7 +21,7 @@ Showgroup
 - Thread preview * Complete *
 - New thread link * Complete *
 - Group Logo * Complete *
-- Implement Group Jump Menu
+- Implement Group Jump Menu * Complete *
 - Implement Invite Only
 - Implement Private Group * Complete *
 - Implement Locked Group * Complete *
