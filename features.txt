@@ -1,7 +1,7 @@
 Group CP
 - Add / Remove Leaders ( Group Owner Only ) * Complete *
 - Edit Group Link ( Group Leaders / Moderators ) * Complete *
-- Manage Join Requests ( Group Leaders )
+- Manage Join Requests ( Group Leaders ) * In Progress *
 - Add / Remove Members
 - Lock Group ( Moderators Only ) * Complete *
 
@@ -27,6 +27,18 @@ Showgroup
 - Implement Locked Group * Complete *
 - Implement Staff Only Group ( Moderators+ ) * Complete *
 - Inline Thread Moderation * Complete *
+
+Admin Modules
+- Templates - Easily update, export, and download templates for Social Groups. * Complete *
+- Leader Management * Complete *
+- Category Management * Complete *
+- Moderator Management * Complete *
+- Global Announcements * Complete *
+- Admin Permissions * Complete *
+
+Moderator CP
+- Log moderator actions. * Complete *
+
 
 Plugin Hooks
 groups.php
