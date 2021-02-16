@@ -1,0 +1,38 @@
+Group CP
+- Add / Remove Leaders ( Group Owner Only ) * Complete *
+- Edit Group Link ( Group Leaders / Moderators ) * Complete *
+- Manage Join Requests ( Group Leaders )
+- Add / Remove Members
+- Lock Group ( Moderators Only ) * Complete *
+
+Groups
+- Create Group Button * Complete *
+- Filter by category * Complete *
+- Search for group name * Complete *
+- Sort by name, threads, post, and creator * Complete *
+- List users browsing
+
+Showgroup
+- List users browsing group
+- List Group Members * Complete *
+- List Group Leaders * Complete *
+- Show Global Announcements * Complete *
+- Show group specific announcement * Complete *
+- Thread preview * Complete *
+- New thread link * Complete *
+- Group Logo * Complete *
+- Implement Group Jump Menu
+- Implement Invite Only
+- Implement Private Group * Complete *
+- Implement Locked Group * Complete *
+- Implement Staff Only Group ( Moderators+ ) * Complete *
+- Inline Thread Moderation * Complete *
+
+Plugin Hooks
+groups.php
+showgroup.php
+groupthread.php
+groupcp.php
+
+Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. * Complete *
+Custom CSS on a per group basis.
