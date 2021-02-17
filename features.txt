@@ -26,6 +26,7 @@ Showgroup
 - Implement Private Group * Complete *
 - Implement Locked Group * Complete *
 - Implement Staff Only Group ( Moderators+ ) * Complete *
+- Implement Join Types: ( Instant, Approval Required )
 - Inline Thread Moderation * Complete *
 
 Admin Modules
