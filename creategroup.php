@@ -36,7 +36,8 @@ if($mybb->request_method=="post" && verify_post_check($mybb->input['my_post_key'
         "private" => (int) $mybb->input['private'],
         "staffonly" => (int) $mybb->input['staffonly'],
         "inviteonly" => (int) $mybb->input['inviteonly'],
-        "uid" => (int) $mybb->user['uid']
+        "uid" => (int) $mybb->user['uid'],
+        "jointype" => $mybb->input['jointype']
     );
     $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
     if($new_group['approved'] == 0)
