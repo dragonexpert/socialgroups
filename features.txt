@@ -1,7 +1,7 @@
 Group CP
 - Add / Remove Leaders ( Group Owner Only ) * Complete *
 - Edit Group Link ( Group Leaders / Moderators ) * Complete *
-- Manage Join Requests ( Group Leaders ) * In Progress *
+- Manage Join Requests ( Group Leaders ) * Complete *
 - Add / Remove Members
 - Lock Group ( Moderators Only ) * Complete *
 
