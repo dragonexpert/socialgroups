@@ -48,6 +48,7 @@ function socialgroups_insert_settings()
     $new_settings[] = array(
         "name" => "socialgroups_showgroupjump",
         "title" => "Show Group Jump Menu",
+        "description" => "Whether to display a group jump menu on showgroup.php and groupthread.php.",
         "optionscode" => "yesno",
         "disporder" => 3,
         "value" => 1,
