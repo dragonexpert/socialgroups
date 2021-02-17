@@ -36,7 +36,8 @@ if($mybb->input['action'] == "editgroup")
             "private" => $mybb->input['private'],
             "inviteonly" => $mybb->input['inviteonly'],
             "cid" => $mybb->input['cid'],
-            "logo" => $mybb->input['logo']
+            "logo" => $mybb->input['logo'],
+            "jointype" => $mybb->input['jointype']
         );
         if(isset($mybb->input['locked']))
         {
@@ -76,6 +77,10 @@ if($mybb->input['action'] == "editgroup")
         else
         {
             $inviteno = 'selected="selected"';
+        }
+        if($group['jointype'] == 1)
+        {
+            $jointype = 'selected="selected"';
         }
         $viewablecategories = $socialgroups->get_viewable_categories();
         $categoryselect = "<option value='" . $group['cid'] . "'>" . $viewablecategories[$group['cid']] . "</option>";
