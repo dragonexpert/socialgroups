@@ -148,7 +148,7 @@ class socialgroups
         $gid = (int) $gid;
         $name = htmlspecialchars_uni($name);
         $action = htmlspecialchars_uni($action);
-        $grouplink = "<a href='" . $mybb->settings['bburl'] . "/groups.php?gid=$gid";
+        $grouplink = "<a href='" . $mybb->settings['bburl'] . "/showgroup.php?gid=$gid";
         if($action)
         {
             $grouplink .= "&amp;action=$action";
