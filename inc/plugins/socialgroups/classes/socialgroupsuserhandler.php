@@ -49,15 +49,15 @@ class socialgroupsuserhandler
         }
         if($socialgroups->group[$gid]['uid'] == $uid)
         {
-            return TRUE;
+            return true;
         }
         if(array_key_exists($gid, $this->members))
         {
             if(in_array($uid, $this->members[$gid]))
             {
-                return TRUE;
+                return true;
             }
-            return FALSE;
+            return false;
         }
         else
         {
@@ -69,9 +69,9 @@ class socialgroupsuserhandler
             }
             if(in_array($uid, $this->members[$gid]))
             {
-                return TRUE;
+                return true;
             }
-            return FALSE;
+            return false;
         }
     }
 
@@ -95,9 +95,9 @@ class socialgroupsuserhandler
         {
             if(in_array($uid, $this->leaders[$gid]))
             {
-                return TRUE;
+                return true;
             }
-            return FALSE;
+            return false;
         }
         else
         {
@@ -109,9 +109,9 @@ class socialgroupsuserhandler
             }
             if(in_array($uid, $this->leaders[$gid]))
             {
-                return TRUE;
+                return true;
             }
-            return FALSE;
+            return false;
         }
     }
 
@@ -123,13 +123,13 @@ class socialgroupsuserhandler
         // Admins and global moderators should be automatic moderators
         if($mybb->usergroup['cancp'] || $mybb->usergroup['issupermod'])
         {
-            return TRUE;
+            return true;
         }
         $gid = (int) $gid;
         if(!$gid)
         {
             // We return false here instead of above because admins should be allowed to moderate anything.
-            return FALSE;
+            return false;
         }
         $uid = (int) $uid;
         if(!$uid)
@@ -140,9 +140,9 @@ class socialgroupsuserhandler
         $moderators = $this->load_moderators($gid);
         if(in_array($uid, $moderators['users']))
         {
-            return TRUE;
+            return true;
         }
-        return FALSE;
+        return false;
     }
 
     /* This function loads the members of a group. */
@@ -217,7 +217,7 @@ class socialgroupsuserhandler
         $gid = (int) $gid;
         if(!$gid)
         {
-            return FALSE;
+            return false;
         }
         $cid = $this->group[$gid]['cid'];
         $uid = (int) $uid;
@@ -227,25 +227,29 @@ class socialgroupsuserhandler
         }
         if(!$uid) // it must be a guest
         {
-            return FALSE;
+            return false;
         }
         if($this->is_member($gid, $uid))
         {
-            return FALSE;
+            return false;
         }
         if($this->group[$gid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
-            return FALSE;
+            return false;
         }
         if($this->category[$cid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
-            return FALSE;
+            return false;
         }
         if($this->group[$gid]['inviteonly'] && !$this->has_invite($gid, $uid))
         {
-            return FALSE;
+            return false;
         }
-        return TRUE;
+        if($this->group[$gid]['jointype'] == 1 && $this->has_join_request($gid, $uid))
+        {
+            return false;
+        }
+        return true;
     }
 
     /* This function checks if a member has an invitation to join a group. */
@@ -257,7 +261,7 @@ class socialgroupsuserhandler
         $uid = (int) $uid;
         if(!$gid)
         {
-            return FALSE;
+            return false;
         }
         if(!$uid)
         {
@@ -265,14 +269,27 @@ class socialgroupsuserhandler
         }
         if(!$uid)
         {
-            return FALSE;
+            return false;
         }
         $query = $db->simple_select("socialgroup_invites", "*", "gid=$gid AND touid=$uid");
         if($db->num_rows($query))
         {
-            return TRUE;
+            return true;
         }
-        return FALSE;
+        return false;
+    }
+
+    public function has_join_request($gid=0, $uid=0)
+    {
+        global $db;
+        $query = $db->simple_select("socialgroup_join_requests", "*", "gid=" . $gid . " AND uid=" . $uid);
+        if($db->num_rows($query) >= 1)
+        {
+            $db->free_result($query);
+            return true;
+        }
+        $db->free_result($query);
+        return false;
     }
 
     /* This function puts a member in a group.
