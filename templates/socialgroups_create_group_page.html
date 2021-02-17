@@ -1,0 +1,59 @@
+<html>
+        <head>
+        <title>Create Group</title>
+        {$headerinclude}
+        </head>
+        <body>
+        {$header}
+        <table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder">
+    <form action="{$mybb->settings['bburl']}/crreategroup.php" method="post" />
+    <input type="hidden" name="my_post_key" value="{$mybb->post_code}" />
+<tr>
+<td class="trow1">Group Name: </td>
+<td class="trow1"><input type="text" name="name" value="{$mybb->input['name']}" /></td>
+</tr>
+<tr>
+ <td class="trow1">Description: </td>
+<td class="trow1"><textarea name="description" rows="5" cols="70">{$mybb->input['description']}</textarea></td>
+</tr>
+<tr>
+<td class="trow1">Group Logo:</td>
+<td class="trow1"><input type="text" name="logo" value="{$mybb->input['logo']}" /></td>
+</tr>
+<tr>
+<td class="trow1">Private:</td>
+<td class="trow1"><select name="private">
+    <option value="0"{$privateno}>{$lang->no}</option>
+    <option value="1" {$privateyes}>{$lang->yes}</option>
+    </select></td>
+</tr>
+<tr>
+<td class="trow1">Invite Only:</td>
+<td class="trow1"><select name="inviteonly">
+    <option value="0" {$inviteno}>{$lang->no}</option>
+    <option value="1" {$inviteyes}>{$lang->yes}</option>
+    </select></td>
+</tr>
+<tr>
+<td class="trow1">Join Request Required:</td>
+<td class="trow1"><select name="jointype">
+<option value="0">{$lang->no}</option>
+<option value="1">{$lang->yes}</option>
+</select>
+</td>
+</tr>
+<tr>
+<td class="trow1">Category:</td>
+<td class="trow1"><select name="cid">
+    {$categoryselect}
+    </select></td>
+</tr>
+    {$staffonly}
+<tr><td class="trow1" colspan="2"><input type="submit" value="Create Group" class="button" />
+    </form></td>
+</tr>
+</table>
+        <br />
+        {$footer}
+        </body>
+        </html>

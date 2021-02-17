@@ -39,9 +39,28 @@ if($groupinfo['staffonly'] && !$mybb->user['canmodcp'])
 if($mybb->input['action'] == "joingroup")
 {
     //Our function does all the hard work of figuring out if a person can join.
-    $socialgroups->socialgroupsuserhandler->join($gid, $uid);
-    $message = $lang->socialgroups_joined_group;
-    redirect("showgroup.php?gid=$gid", $message);
+    if($groupinfo['jointype'] == 0)
+    {
+        $socialgroups->socialgroupsuserhandler->join($gid, $uid);
+        $message = $lang->socialgroups_joined_group;
+        redirect("showgroup.php?gid=$gid", $message);
+    }
+    if($groupinfo['jointype'] == 1)
+    {
+        if($socialgroups->socialgroupsuserhandler->can_join($groupinfo['gid'], $mybb->user['uid']))
+        {
+            $join_request = array(
+                "gid" => $groupinfo['gid'],
+                "uid" => $mybb->user['uid'],
+                "dateline" => time()
+            );
+
+            $db->insert_query("socialgroup_join_requests", $join_request);
+            $message = "Your join request has been sent.";
+            redirect("showgroup.php?gid=$gid", $message);
+        }
+    }
+
 }
 if($mybb->input['action'] == "leavegroup")
 {
