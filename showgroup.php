@@ -302,7 +302,7 @@ foreach($threadlist as $thread)
     }
     if($thread['closed'])
     {
-        $lockicon = "<span class=\"thread_status lockfolder\" title=\"locked thread\">&nbsp;</span>";
+        $lockicon = "<span class=\"thread_status closefolder\" title=\"locked thread\">&nbsp;</span>";
     }
     else
     {
