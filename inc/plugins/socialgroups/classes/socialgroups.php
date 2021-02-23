@@ -148,7 +148,7 @@ class socialgroups
         $gid = (int) $gid;
         $name = htmlspecialchars_uni($name);
         $action = htmlspecialchars_uni($action);
-        $grouplink = "<a href='" . $mybb->settings['bburl'] . "/showgroup.php?gid=$gid";
+        $grouplink = "<a href='" . $mybb->settings['bburl'] . "/groups.php?gid=$gid";
         if($action)
         {
             $grouplink .= "&amp;action=$action";
@@ -622,5 +622,23 @@ class socialgroups
             $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
         }
         return $this->viewable_categories;
+    }
+
+    /**
+     * This function updates the cache so we can use it for performance.
+     * The main time this should be used is when adding, editing, or deleting a group.
+     * Do not rely on this for the number of posts and threads.
+     */
+    public function update_cache()
+    {
+        global $db, $cache;
+        $data = array();
+        $query = $db->simple_select("socialgroups", "*");
+        while($group = $db->fetch_array($query))
+        {
+            $data[$group['gid']] = $group;
+        }
+        $db->free_result($query);
+        $cache->update("socialgroups", $data);
     }
 }
