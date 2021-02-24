@@ -17,6 +17,8 @@ $plugins->add_hook("modcp_modlogs_start", "socialgroups_modcp_modlogs_start");
 $plugins->add_hook("modcp_modlogs_result", "socialgroups_modcp_modlogs_result");
 $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
+$plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
+$plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
 
 function socialgroups_admin_load()
 {
@@ -148,4 +150,61 @@ function socialgroups_xmlhttp()
     {
         return;
     }
+}
+
+function socialgroups_fetch_wol_activity_end($user_activity)
+{
+    global $parameters;
+    if(stripos($user_activity['location'], "groups.php"))
+    {
+        $user_activity['activity'] = "groups";
+    }
+    if(stripos($user_activity['location'], "showgroup.php"))
+    {
+        $user_activity['activity'] = "showgroup";
+        $user_activity['gid'] = $parameters['gid'];
+    }
+    if(stripos($user_activity['location'], "groupthread.php"))
+    {
+        $user_activity['activity'] = "groupthread";
+        $user_activity['tid'] = $parameters['tid'];
+    }
+    return $user_activity;
+}
+
+function socialgroups_build_friendly_wol_location_end($array)
+{
+    global $db, $cache, $mybb, $socialgroups, $groupthreads;
+    if(!is_object($socialgroups))
+    {
+        require_once $mybb->settings['bburl'] . "/inc/plugins/socialgroups/classes/socialgroups.php";
+        $socialgroups = new socialgroups(0, false, false, false, false);
+    }
+    $socialgroupsinfo = $cache->read("socialgroups");
+    if(!is_array($groupthreads))
+    {
+        $query = $db->simple_select("socialgroup_threads", "tid, subject");
+        while($thread = $db->fetch_array($query))
+        {
+            $groupthreads[$thread['tid']] = $thread;
+        }
+        $db->free_result($query);
+    }
+    if($array['user_activity']['activity'] == "groups")
+    {
+        $array['location_name'] = "<a href='" . $mybb->settings['bburl'] . "/groups.php'>Viewing Groups</a>";
+    }
+    if($array['user_activity']['activity'] == "showgroup")
+    {
+            $gid = $array['user_activity']['gid'];
+            $link = $socialgroups->grouplink($gid, $socialgroupsinfo[$gid]['name']);
+            $array['location_name'] = "Viewing Group: " . $link;
+    }
+    if($array['user_activity']['activity'] == "groupthread")
+    {
+        $tid = $array['user_activity']['tid'];
+        $link = $socialgroups->groupthreadlink($tid, $groupthreads[$tid]['subject']);
+        $array['location_name'] = "Viewing Thread: " . $link;
+    }
+    return $array;
 }
