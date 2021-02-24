@@ -16,6 +16,10 @@ class socialgroupsthreadhandler
         // Nothing
     }
 
+    /**
+     * This function creates a new thread.
+     * @param array $data An array of data about the thread.
+     */
     public function new_thread($data=array())
     {
         global $mybb, $socialgroups, $db, $plugins;
@@ -86,6 +90,10 @@ class socialgroupsthreadhandler
         redirect("groupthread.php?tid=$tid", $message);
     }
 
+    /**
+     * This function creates a new post in a thread.
+     * @param array $data An array of data about the post.
+     */
     public function new_post($data=array())
     {
         global $mybb, $db, $socialgroups, $plugins;
@@ -153,6 +161,11 @@ class socialgroupsthreadhandler
         redirect("groupthread.php?tid=" . $new_post['tid'], $message);
     }
 
+    /**
+     * This function updates a post.
+     * @param int $pid The id of the post.
+     * @param array $data An array of data about the post.
+     */
     public function update_post($pid=0, $data=array())
     {
         global $mybb, $db, $plugins, $socialgroups;
@@ -186,15 +199,16 @@ class socialgroupsthreadhandler
         redirect("groupthread.php?tid=" . $postinfo['tid'], $message);
     }
 
-    /* Delete a post.
-   * $permanent: if 1, the post is removed from the database.
-   * If not 1, the post can be restored in the ACP.
-   * Only the group owner or moderators can actually delete posts. */
+    /**
+     * This function deletes a post.
+     * @param int $pid The id of the post.
+     * @param int $gid The id of the group.
+     * @param int $permanent Whether to physically remove from database.
+     */
 
-    public function delete_post($pid, $gid=0, $permanent=0)
+    public function delete_post(int $pid=0, int $gid=0, int $permanent=0)
     {
         global $mybb, $db, $lang, $socialgroups;
-        $pid = (int) $pid;
         if(!$pid)
         {
             $this->error("invalid_post");
@@ -239,15 +253,16 @@ class socialgroupsthreadhandler
         }
     }
 
-    /* This function deletes a thread.
-    * When $permanent is 1 and the user is a moderator, the thread is permanently deleted.
-    * All other cases result in soft deletion */
+    /**
+     * This function deletes an entire thread.
+     * @param int $tid The id of the thread.
+     * @param int $gid The id of the group.
+     * @param int $permanent Whether to physically remove from the database.
+     */
 
-    public function delete_thread($tid=0, $gid=0, $permanent=0)
+    public function delete_thread(int $tid=0, int $gid=0, int $permanent=0)
     {
         global $db, $mybb, $lang, $socialgroups;
-        $gid = (int) $gid;
-        $tid = (int) $tid;
         if(!$tid)
         {
             $this->error("invalid_thread");
@@ -261,7 +276,7 @@ class socialgroupsthreadhandler
             $db->delete_query("socialgroup_posts", "tid=$tid");
             $action = $lang->delete_thread;
         }
-        else if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid) && $permanent != 1)
+        else if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']) && $permanent != 1)
         {
             $db->update_query("socialgroup_threads", array("visible" => -1), "tid=$tid");
             $action = $lang->soft_delete_thread;
@@ -282,14 +297,15 @@ class socialgroupsthreadhandler
         log_moderator_action($data, $action);
     }
 
-    /* Recount the number of posts a group has.
-* When $tid is set it recounts the number of posts in that thread as well. */
+    /** Recount the number of posts a group has.
+     * When $tid is set it recounts the number of posts in that thread as well.
+     * @param int $gid The id of the group.
+     * @param int $tid The id of the thread.
+     */
 
-    function recount_posts($gid, $tid=0)
+    function recount_posts(int $gid=0, int $tid=0)
     {
         global $db;
-        $gid = (int) $gid;
-        $tid = (int) $tid;
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroups
             SET posts=(SELECT COUNT(pid) FROM " . TABLE_PREFIX . "socialgroup_posts WHERE gid=$gid AND visible=1)
             WHERE gid=$gid");
@@ -302,14 +318,198 @@ class socialgroupsthreadhandler
         }
     }
 
-    /* Recount the number of threads a group has. */
+    /** Recount the number of threads a group has.
+     * @param int $gid The id of the group.
+     */
 
-    function recount_threads($gid)
+    function recount_threads(int $gid=0)
     {
         global $db;
-        $gid = (int) $gid;
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroups
             SET threads=(SELECT COUNT(tid) FROM " . TABLE_PREFIX . "socialgroup_threads WHERE gid=$gid AND visible=1)
             WHERE gid=$gid");
+    }
+
+    /**
+     * This function loads the threads for a group the user can see.
+     * @param int $gid The id of the group.
+     * @param int $page The page to load.
+     * @param int $perpage How many to load.
+     * @param array $sort An array of options to sort. (field, direction)
+     * @return mixed|void An array on success. False on failure.
+     */
+
+    public function load_threads(int $gid=1, $page=1, $perpage=20, $sort=array())
+    {
+        global $mybb, $db, $socialgroups;
+        // First we have to see if the user can even see threads.
+        if($mybb->usergroup['isbannedgroup'])
+        {
+            error_no_permission();
+        }
+        if($gid < 1)
+        {
+            $socialgroups->error("invalid_group");
+        }
+        $group = $socialgroups->load_group($gid);
+        if($group['private'] == 1 && !is_member($gid, $mybb->user['uid']))
+        {
+            return;
+        }
+        $page = (int) $page;
+        if($page < 1 || $page == "") // Fallback to prevent an error
+        {
+            $page = 1;
+        }
+        $perpage = (int) $perpage;
+        if(!$perpage) // Fallback if it was forgotten to avoid an ugly error
+        {
+            $perpage = 20;
+        }
+
+        $start = $page * $perpage - $perpage;
+
+        // Moderators and leaders can view unapproved threads
+        if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
+        {
+            $visible = 0;
+        }
+        else
+        {
+            $visible = 1;
+        }
+
+        switch($sort['field'])
+        {
+            case "dateline":
+                $sortfield = "t.dateline";
+                break;
+
+            case "username":
+                $sortfield = "u.username";
+                break;
+
+            case "subject":
+                $sortfield = "t.subject";
+                break;
+
+            case "replies":
+                $sortfield = "t.replies";
+                break;
+
+            case "views":
+                $sortfield = "t.views";
+                break;
+
+            default:
+                $sortfield = "t.dateline";
+                break;
+        }
+
+        if($sort['direction'] == "asc")
+        {
+            $sortdirection = "ASC";
+        }
+        else if($sort['direction'] == "desc")
+        {
+            $sortdirection = "DESC";
+        }
+        else
+        {
+            $sortdirection = "DESC";
+        }
+
+        $query = $db->query("SELECT t.*, p.*, u.*
+        FROM " . TABLE_PREFIX . "socialgroup_threads t
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_posts p ON(t.firstpost=p.pid)
+        LEFT JOIN " . TABLE_PREFIX . "users u ON(t.uid=u.uid)
+        WHERE t.gid=$gid AND t.visible >= $visible
+        ORDER BY t.sticky DESC, $sortfield $sortdirection
+        LIMIT $start , $perpage");
+
+        while($thread = $db->fetch_array($query))
+        {
+            $threads[$thread['tid']] = $thread;
+            // Do the profile links, avatars, and time management here to make it easy to access
+            $thread['formattedname'] = format_name($thread['username'], $thread['usergroup'], $thread['displaygroup']);
+            $thread['profilelink'] = build_profile_link($thread['formattedname'], $thread['uid']);
+            // Only build the avatar if the usercp says yes
+            if($mybb->user['showavatars'])
+            {
+                $thread['avatar'] = format_avatar($thread['avatar'], $thread['avatardimensions']);
+            }
+            $thread['dateline'] = my_date("relative", $thread['dateline']);
+            $thread['lastposttime'] = my_date("relative", $thread['lastposttime']);
+            $socialgroups->threads[$gid][$thread['tid']] = $thread;
+        }
+        return $socialgroups->threads[$gid];
+    }
+
+    /**
+     * This function loads posts in a thread.
+     * @param int $gid The id of the group.
+     * @param int $tid The id of the thread.
+     * @param int $page The page number.
+     * @param int $perpage How many to load.
+     * @return mixed An array on success. Error page on failure.
+     */
+    public function load_posts(int $gid=0, int $tid=0, int $page=1, int $perpage=20)
+    {
+        global $db, $mybb, $cache, $templates, $socialgroups;
+        if(!$tid)
+        {
+            $socialgroups->error("invalid_thread");
+        }
+        if(!$gid)
+        {
+            // Attempt to load from thread.
+            $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
+            $thread = $db->fetch_array($query);
+            $gid = $thread['gid'];
+            $socialgroups->thread[$gid][$thread['tid']] = $thread;
+            if(!$gid)
+            {
+                $this->error("invalid_thread");
+            }
+        }
+        $visible = 1;
+        if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+        {
+            $visible = 0;
+        }
+        if(!$perpage)
+        {
+            $perpage = 20;
+        }
+        if(!$page || $page < 1)
+        {
+            $page = 1;
+        }
+        if($page > 1)
+        {
+            // We have to figure out how many pages so we don't load any empty set.
+            $countquery = $db->simple_select("socialgroup_posts", "COUNT(pid) as posts", "tid=$tid AND visible >=$visible");
+            $total = $db->fetch_field($countquery, "posts");
+            $pages = ceil($total / $perpage);
+            if($page > $pages)
+            {
+                $page = $pages;
+            }
+        }
+        $start = $page * $perpage - $perpage;
+        $query = $db->query("SELECT p.*, u.*, u.username AS userusername, f.*, t.*, eu.username AS editusername
+        FROM " . TABLE_PREFIX . "socialgroup_posts p
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
+        LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
+        LEFT JOIN ".TABLE_PREFIX."userfields f ON (f.ufid=u.uid)
+        LEFT JOIN ".TABLE_PREFIX."users eu ON (eu.uid=p.lasteditby)
+        WHERE p.tid=$tid AND t.visible >=$visible AND p.visible >= $visible
+        ORDER BY p.dateline ASC
+        LIMIT $start , $perpage");
+        while($post = $db->fetch_array($query))
+        {
+            $socialgroups->posts[$tid][$post['pid']] = $post;
+        } // End the post loop
+        return $socialgroups->posts[$tid];
     }
 }
