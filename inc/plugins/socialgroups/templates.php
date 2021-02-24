@@ -19,7 +19,7 @@ function socialgroups_insert_templates()
 
     $template_group = array(
         "prefix" => "socialgroups_",
-        "title" => "Social Group Templates",
+        "title" => "Social Group",
         "isdefault" => 0
     );
 
