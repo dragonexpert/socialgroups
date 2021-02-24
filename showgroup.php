@@ -22,8 +22,8 @@ add_breadcrumb($lang->socialgroups, "groups.php");
 $groupinfo = $socialgroups->load_group($gid);
 $cid = $socialgroups->group[$gid]['cid'];
 $title = stripcslashes($socialgroups->group[$gid]['name']);
-add_breadcrumb($socialgroups->category[$cid]['name'], "groups.php?cid=$cid");
-add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), "showgroup.php?gid=$gid");
+add_breadcrumb($socialgroups->category[$cid]['name'], $socialgroups->breadcrumb_link("category", $cid, $socialgroups->category[$cid]['name']));
+add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), $socialgroups->breadcrumb_link("group", $gid, $groupinfo['name']));
 $members = $socialgroups->socialgroupsuserhandler->members[$gid];
 $leaders = $socialgroups->socialgroupsuserhandler->leaders[$gid];
 $canviewgroup = 1;
@@ -330,6 +330,7 @@ foreach($threadlist as $thread)
     }
     $plugins->run_hooks("showgroup_thread");
     $thread['message'] = $parser->parse_message($thread['message'], $parser_options);
+    $thread['threadlink'] = $socialgroups->groupthreadlink($thread['tid'], $thread['subject']);
     eval("\$threads .=\"".$templates->get("socialgroups_thread_thread")."\";");
     $stickybit= "";
 }

@@ -143,7 +143,14 @@ class socialgroups
     {
         global $lang;
         $variable = "socialgroups_" . $string;
-        error($lang->$variable);
+        if(isset($lang->$variable))
+        {
+            error($lang->$variable);
+        }
+        else
+        {
+            error($string);
+        }
     }
 
     /**
@@ -155,33 +162,152 @@ class socialgroups
      * @return string A link to the group.
      */
 
-    public function grouplink(int $gid, string $name, string $action=""): string
+    public function grouplink(int $gid=0, string $name="", string $action=""): string
     {
         global $mybb;
         $name = htmlspecialchars_uni($name);
         $action = htmlspecialchars_uni($action);
+        $additional_classes = "";
 
         if($mybb->settings['socialgroups_seo_urls'])
         {
             $find = array(",", " ", "!", ".", "+", "%", "^", "&", "*", "(", ")", "=", "/", "\\", "[", "]", "{", "}", "|", "?", "<", ">");
-            $name = str_replace($find, "-", $name);
-            $name = str_replace("--", "-", $name);
-            $link = $mybb->settings['bburl'] . "/group-" . $gid . "-" . $name;
+            $safe_name = str_replace($find, "-", $name);
+            $safe_name = str_replace("--", "-", $safe_name);
+            $link = $mybb->settings['bburl'] . "/group-" . $gid . "-" . $safe_name;
             if($action)
             {
                 $link .= "-action-" . $action;
+                $additional_classes = $action . "_link";
             }
             $link .= ".html";
         }
         else
         {
-            $link = $mybb->settings['bburl'] . "/groups.php?gid=$gid";
+            $link = $mybb->settings['bburl'] . "/showgroup.php?gid=$gid";
             if ($action)
             {
                 $link .= "&amp;action=$action";
+                $additional_classes = $action . "_link";
             }
         }
-        return "<a href='" . $link . "' class='group_link'>" . $name . "</a>";
+        return "<a href='" . $link . "' class='group_link " . $additional_classes . "'>" . $name . "</a>";
+    }
+
+    /**
+     * This function generates a link to a category.
+     * This incorporates SEO setting.
+     * @param int $cid The id of the category.
+     * @param string $name The name of the category.
+     * @return string A link to the category.
+     */
+    public function categorylink(int $cid=0, string $name="")
+    {
+        global $mybb;
+        $name = htmlspecialchars_uni($name);
+
+        if($mybb->settings['socialgroups_seo_urls'])
+        {
+            $find = array(",", " ", "!", ".", "+", "%", "^", "&", "*", "(", ")", "=", "/", "\\", "[", "]", "{", "}", "|", "?", "<", ">");
+            $safe_name = str_replace($find, "-", $name);
+            $safe_name = str_replace("--", "-", $safe_name);
+            $link = $mybb->settings['bburl'] . "/group-category-" . $cid . "-" . $safe_name . ".html";
+        }
+        else
+        {
+            $link = $mybb->settings['bburl'] . "/groups.php?cid=$cid";
+        }
+        return "<a href='" . $link . "' class='group_category_link'>" . $name . "</a>";
+    }
+
+    /**
+     * This function generates a link to a group thread.
+     * This function incorporates SEO setting.
+     * @param int $tid The id of the thread.
+     * @param string $name The title of the thread.
+     * @param string $action Any action that is being done.
+     * @return string A link to the group thread.
+     */
+    public function groupthreadlink(int $tid=0, string $name="", string $action="")
+    {
+        global $mybb;
+        $name = htmlspecialchars_uni($name);
+        $action = htmlspecialchars_uni($action);
+        $additional_classes = "";
+
+        if($mybb->settings['socialgroups_seo_urls'])
+        {
+            $find = array(",", " ", "!", ".", "+", "%", "^", "&", "*", "(", ")", "=", "/", "\\", "[", "]", "{", "}", "|", "?", "<", ">");
+            $safe_name = str_replace($find, "-", $name);
+            $safe_name = str_replace("--", "-", $safe_name);
+            $link = $mybb->settings['bburl'] . "/groupthread-" . $tid . "-" . $safe_name;
+            if($action)
+            {
+                $link .= "-action-" . $action;
+                $additional_classes = $action . "_link";
+            }
+            $link .= ".html";
+        }
+        else
+        {
+            $link = $mybb->settings['bburl'] . "/groupthread.php?tid=$tid";
+            if ($action)
+            {
+                $link .= "&amp;action=$action";
+                $additional_classes = $action . "_link";
+            }
+        }
+        return "<a href='" . $link . "' class='groupthread_link " . $additional_classes . "'>" . $name . "</a>";
+    }
+
+    /**
+     * @param string $type The type of page: ( group, groupthread, category, or custom by using a plugin hook )
+     * @param int $id The primary key.
+     * @param string $name The name. Only used if SEO is enabled.
+     * @return string The proper link for breadcrumb links.
+     */
+    public function breadcrumb_link(string $type="group", int $id=0, string $name="")
+    {
+        global $mybb, $plugins;
+        $name = htmlspecialchars_uni($name);
+        if($mybb->settings['socialgroups_seo_urls'])
+        {
+            $find = array(",", " ", "!", ".", "+", "%", "^", "&", "*", "(", ")", "=", "/", "\\", "[", "]", "{", "}", "|", "?", "<", ">");
+            $safe_name = str_replace($find, "-", $name);
+            $safe_name = str_replace("--", "-", $safe_name);
+            switch($type)
+            {
+                case "group":
+                    return "group-" . $id . "-" . $safe_name . ".html";
+                    break;
+                case "category":
+                    return "group-category-" . $id . "-" . $safe_name . ".html";
+                    break;
+                case "groupthread":
+                    return "groupthread-" . $id . "-" . $safe_name . ".html";
+                    break;
+                default:
+                    // This way others can take advantage of the SEO Engine
+                    return $plugins->run_hooks("socialgroups_breadcrumb_link");
+            }
+        }
+        else
+        {
+            switch($type)
+            {
+                case "group":
+                    return "showgroup.php?gid=" . $id;
+                    break;
+                case "category":
+                    return "groups.php?cid=" . $id;
+                    break;
+                case "groupthread":
+                    return "groupthread.php?tid=" . $id;
+                    break;
+                default:
+                    return $plugins->run_hooks("socialgroups_breadcrumb_link");
+            }
+        }
     }
 
 
@@ -236,6 +362,7 @@ class socialgroups
 
         $query = $db->simple_select("socialgroups", "*", "gid=$gid");
         $group = $db->fetch_array($query);
+        $db->free_result($query);
         $group['name'] = htmlspecialchars_uni($group['name']);
         $group['description'] = htmlspecialchars_uni($group['description']);
         $group['logo'] = htmlspecialchars_uni($group['logo']);
@@ -267,6 +394,7 @@ class socialgroups
             $this->error("invalid_category");
         }
         $this->category[$cid] = $db->fetch_array($query);
+        $db->free_result($query);
         return $this->category[$cid];
     }
 
@@ -351,6 +479,7 @@ class socialgroups
             $announcement['avatar'] = format_avatar($announcement['avatar'], $announcement['avatardimensions']);
             $this->announcements[$gid][$announcement['aid']] = $announcement;
         }
+        $db->free_result($query);
         return $this->announcements[$gid];
     }
 
@@ -452,8 +581,8 @@ class socialgroups
             $this->group_list[$group['cid']][$group['gid']] = array(
                 "gid" => $group['gid'],
                 "cid" => $group['cid'],
-                "category" => htmlspecialchars_uni($group['categoryname']),
-                "name" => htmlspecialchars_uni($group['name']),
+                "category" => $group['categoryname'],
+                "name" => $group['name'],
                 "description" => htmlspecialchars_uni($group['description']),
                 "threads" => $group['threads'],
                 "posts" => $group['posts'],
@@ -465,6 +594,7 @@ class socialgroups
                 "logo" => htmlspecialchars_uni($group['logo'])
             );
         }
+        $db->free_result($query);
         return $this->group_list;
     }
 
@@ -486,16 +616,20 @@ class socialgroups
             {
                 if($subkey['cid'] != $currentcid)
                 {
+                    $subkey['category_link'] = $this->categorylink($subkey['cid'], $subkey['category']);
                     eval("\$html .=\"".$templates->get("socialgroups_category")."\";");
                     $currentcid = $subkey['cid'];
+                    $subkey['category_link'] = "";
                 }
                 if($subkey['logo'] != "")
                 {
                     $groupinfo['logo'] = $subkey['logo'];
                     eval("\$group_logo =\"".$templates->get("socialgroups_logo")."\";");
                 }
+                $subkey['group_link'] = $this->grouplink($subkey['gid'], $subkey['name']);
                 eval("\$html .=\"".$templates->get("socialgroups_group")."\";");
                 $group_logo = "";
+                $subkey['group_link'] = "";
             }
             eval("\$html .=\"".$templates->get("socialgroups_category_split")."\";");
         }
@@ -520,6 +654,7 @@ class socialgroups
         {
             $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
         }
+        $db->free_result($query);
         return $this->viewable_categories;
     }
 

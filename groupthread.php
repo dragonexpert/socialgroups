@@ -16,6 +16,7 @@ $lang->load("showthread");
 $tid = (int) $mybb->input['tid'];
 $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
 $threadinfo = $db->fetch_array($query);
+$db->free_result($query);
 if(!$threadinfo['tid'])
 {
     error_no_permission();
@@ -40,10 +41,10 @@ if($groupinfo['logo'])
 {
     eval("\$grouplogo =\"".$templates->get("socialgroups_logo")."\";");
 }
-add_breadcrumb("Social Groups", "groups.php");
-add_breadcrumb(htmlspecialchars_uni($socialgroups->category[$cid]['name']), "groups.php?cid=$cid");
-add_breadcrumb(htmlspecialchars_uni($socialgroups->group[$gid]['name']), "showgroup.php?gid=$gid");
-add_breadcrumb(htmlspecialchars_uni($threadinfo['subject']), "groupthread.php?tid=$tid");
+add_breadcrumb($lang->socialgroups, "groups.php");
+add_breadcrumb($socialgroups->category[$cid]['name'], $socialgroups->breadcrumb_link("category", $cid, $socialgroups->category[$cid]['name']));
+add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), $socialgroups->breadcrumb_link("group", $gid, $groupinfo['name']));
+add_breadcrumb(htmlspecialchars_uni($threadinfo['subject']), $socialgroups->breadcrumb_link("groupthread", $tid, $threadinfo['subject']));
 $members = $socialgroups->socialgroupsuserhandler->members[$gid];
 $leaders = $socialgroups->socialgroupsuserhandler->leaders[$gid];
 $socialgroups->load_permissions($gid);
@@ -135,6 +136,7 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
 // How many pages are there?
 $query = $db->simple_select("socialgroup_posts", "COUNT(pid) as total", "tid=$tid AND visible >= $visible");
 $total = $db->fetch_field($query, "total");
+$db->free_result($query);
 $pages = ceil($total / 20);
 if($mybb->input['page'])
 {
@@ -153,7 +155,7 @@ if($page > $pages)
     $page = $pages;
 }
 $pagination = multipage($total, 20, $page, "groupthread.php?tid=$tid");
-$posts = $socialgroups->load_posts($gid, $tid, $page, 20);
+$posts = $socialgroups->socialgroupsthreadhandler->load_posts($gid, $tid, $page, 20);
 $parser = new PostParser();
 $forum = array(
     "allowhtml" => 0,
@@ -235,6 +237,7 @@ if($mybb->settings['socialgroups_showgroupjump'] && $mybb->user['uid'] > 0)
         $groupdata['name'] = htmlspecialchars_uni($groupdata['name']);
         eval("\$groupoptions .=\"".$templates->get("socialgroups_groupjump_group")."\";");
     }
+    $db->free_result($query);
     eval("\$groupjumpmenu =\"".$templates->get("socialgroups_groupjump")."\";");
 }
 $plugins->run_hooks("groupthread_end");
