@@ -38,7 +38,7 @@ if($groupinfo['staffonly'] && !$mybb->usergroup['canmodcp'])
 }
 if($groupinfo['logo'])
 {
-        eval("\$grouplogo =\"".$templates->get("socialgroups_logo")."\";");
+    eval("\$grouplogo =\"".$templates->get("socialgroups_logo")."\";");
 }
 add_breadcrumb("Social Groups", "groups.php");
 add_breadcrumb(htmlspecialchars_uni($socialgroups->category[$cid]['name']), "groups.php?cid=$cid");
@@ -225,7 +225,7 @@ if($ismod)
 }
 // Group jump menu
 $groupjumpmenu = "";
-if($mybb->settings['socialgroups_showgroupjump'])
+if($mybb->settings['socialgroups_showgroupjump'] && $mybb->user['uid'] > 0)
 {
     $query = $db->query("SELECT m.gid, g.name FROM " . TABLE_PREFIX . "socialgroup_members m
     LEFT JOIN " . TABLE_PREFIX . "socialgroups g ON(m.gid=g.gid)
