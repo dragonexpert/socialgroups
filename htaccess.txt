@@ -1,0 +1,12 @@
+# Add these to your .htaccess file if you want SEO Url support.
+# Socialgroups stuff
+	# Social Groups Viewing Category. This must be before showgroup rules.
+	RewriteRule ^group-category-([0-9]+)-(.*).html$ groups.php?cid=$1 [L,QSA]
+	
+	# showgroup.php
+    RewriteRule ^group-([0-9]+)-(.*)-action-(.*)\.html$ showgroup.php?gid=$1&action=$3 [L,QSA]
+    RewriteRule ^group-([0-9]+)-(.*)\.html$ showgroup.php?gid=$1 [L,QSA]
+
+	# Social Groups Group Thread
+	RewriteRule ^groupthread-([0-9]+)-(.*)-action-(.*)\.html$ groupthread.php?tid=$1&action=$3 [L,QSA]
+	RewriteRule ^groupthread-([0-9]+)-(.*)\.html$ groupthread.php?tid=$1 [L,QSA]
