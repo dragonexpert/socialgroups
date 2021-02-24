@@ -49,17 +49,19 @@ class socialgroups
 
     public $posts = array();
 
-    /* This can be used to set up some information about our object.  When a group is supplied, all necessary data is loaded.
-    * $gids Mixed: Can be either an array or an integer of the group(s) you wish to load.
-    * $loadannouncements: Whether announcements for the group should be loaded.
-    * $loadmembers: Whether the members of the group should be loaded.
-    * $loadmoderators: Whether moderators for social groups should be loaded.
-    * $loadleaders: Whether the group leaders should be loaded.
-    */
+    /**
+     * socialgroups constructor.
+     * This funciton loads all information about our socialgroups object.
+     * @param int $gids Can be array of integers or single integer.  Loads the designated groups.
+     * @param false $loadannouncements Whether to load announcements for the group.
+     * @param bool $loadmembers Whether to load the list of members for the group.
+     * @param bool $loadmoderators Whether to load the moderators for the group.
+     * @param bool $loadleaders Whether to load the group leaders for the group.
+     */
 
-    public function __construct($gids=0, $loadannouncements=0, $loadmembers=1, $loadmoderators=1, $loadleaders=1)
+    public function __construct($gids=0, $loadannouncements=false, $loadmembers=true, $loadmoderators=true, $loadleaders=true)
     {
-        global $mybb, $lang;
+        global $mybb, $lang, $plugins;
         $lang->load("socialgroups");
         if(!$mybb->settings['socialgroups_enable'] || $mybb->settings['no_plugins'] == 1 || defined("NO_PLUGINS"))
         {
@@ -90,22 +92,23 @@ class socialgroups
             {
                 $this->load_group($gid);
                 $this->load_category($this->group[$gid]['cid']);
-                if($loadannouncements == 1)
+                if($loadannouncements)
                 {
                     $this->load_announcements($gid);
                 }
-                if($loadmembers == 1)
+                if($loadmembers)
                 {
                     $this->socialgroupsuserhandler->load_members($gid);
                 }
-                if($loadmoderators == 1)
+                if($loadmoderators)
                 {
                     $this->socialgroupsuserhandler->load_moderators($gid);
                 }
-                if($loadleaders == 1)
+                if($loadleaders)
                 {
                     $this->socialgroupsuserhandler->load_leaders($gid);
                 }
+                $plugins->run_hooks("socialgroups_constructor");
             }
         }
         if(is_numeric($gids))
@@ -128,49 +131,107 @@ class socialgroups
             {
                 $this->socialgroupsuserhandler->load_leaders($gids);
             }
+            $plugins->run_hooks("socialgroups_constructor");
         }
     }
 
-    /* A generic error function that prepends socialgroups_ to the string for language purposes. */
+    /** A generic error function that prepends socialgroups_ to the string for language purposes.
+     * @param string $string The string to pass to the error handler.
+     */
 
-    public function error($string)
+    public function error(string $string)
     {
         global $lang;
         $variable = "socialgroups_" . $string;
         error($lang->$variable);
     }
 
-    /* A function to generate a link to a group.*/
+    /**
+     * This function generates a link to the group.
+     * This incorporates a setting for SEO Urls.
+     * @param int $gid The id of the group.
+     * @param string $name The name of the group.
+     * @param string $action The action parameter.
+     * @return string A link to the group.
+     */
 
-    public function socialgroups_grouplink($gid, $name, $action="")
+    public function grouplink(int $gid, string $name, string $action=""): string
     {
         global $mybb;
-        $gid = (int) $gid;
         $name = htmlspecialchars_uni($name);
         $action = htmlspecialchars_uni($action);
-        $grouplink = "<a href='" . $mybb->settings['bburl'] . "/groups.php?gid=$gid";
-        if($action)
+
+        if($mybb->settings['socialgroups_seo_urls'])
         {
-            $grouplink .= "&amp;action=$action";
+            $find = array(",", " ", "!", ".", "+", "%", "^", "&", "*", "(", ")", "=", "/", "\\", "[", "]", "{", "}", "|", "?", "<", ">");
+            $name = str_replace($find, "-", $name);
+            $name = str_replace("--", "-", $name);
+            $link = $mybb->settings['bburl'] . "/group-" . $gid . "-" . $name;
+            if($action)
+            {
+                $link .= "-action-" . $action;
+            }
+            $link .= ".html";
         }
-        $grouplink .= "'>$name</a>";
-        return $grouplink;
+        else
+        {
+            $link = $mybb->settings['bburl'] . "/groups.php?gid=$gid";
+            if ($action)
+            {
+                $link .= "&amp;action=$action";
+            }
+        }
+        return "<a href='" . $link . "' class='group_link'>" . $name . "</a>";
     }
 
 
+    /**
+     * This function loads a group and should be the first function called.
+     * @param int $gid The id of the group.
+     * @param bool $use_cache Load from cache when true. Load from database if false.
+     * @return mixed An array of group information on success.  Error page on failure.
+     */
 
-    /* This function loads the selected group. This should generally be the first method called. */
-
-    public function load_group($gid=1)
+    public function load_group(int $gid=1, bool $use_cache=true): array
     {
-        global $mybb, $lang, $db, $plugins;
-        if(!is_numeric($gid))
-        {
-            $this->error("invalid_group");
-        }
+        global $mybb, $lang, $db, $plugins, $cache;
         if($gid < 1)
         {
             $this->error("invalid_group");
+        }
+        if($use_cache)
+        {
+            $groups = $cache->read("socialgroups");
+            if(is_array($groups))
+            {
+                if(is_array($groups[$gid]))
+                {
+                    $groups[$gid]['name'] = htmlspecialchars_uni($groups[$gid]['name']);
+                    $groups[$gid]['description'] = htmlspecialchars_uni($groups[$gid]['description']);
+                    $groups[$gid]['logo'] = htmlspecialchars_uni($groups[$gid]['logo']);
+                    $this->group[$gid] = $groups[$gid];
+                    return $groups[$gid];
+                }
+                else
+                {
+                    $this->error("invalid_group");
+                }
+            }
+            else
+            {
+                // The cache doesn't exist.
+                $this->update_cache();
+                $groups = $cache->read("socialgroups");
+                if(!is_array($groups[$gid]))
+                {
+                    $this->error("invalid_group");
+                }
+                $groups[$gid]['name'] = htmlspecialchars_uni($groups[$gid]['name']);
+                $groups[$gid]['description'] = htmlspecialchars_uni($groups[$gid]['description']);
+                $groups[$gid]['logo'] = htmlspecialchars_uni($groups[$gid]['logo']);
+                $this->group[$gid] = $groups[$gid];
+                return $groups[$gid];
+            }
         }
 
         $query = $db->simple_select("socialgroups", "*", "gid=$gid");
@@ -184,12 +245,14 @@ class socialgroups
         return $this->group[$gid];
     }
 
-    /* This function loads a category.  Typically called after loading a group. */
+    /** This function loads a category.  Typically called after loading a group.
+     * @param int $cid The id of the category.
+     * @return array An array of category information.
+     */
 
-    public function load_category($cid=1)
+    public function load_category(int $cid=1): array
     {
         global $db;
-        $cid = (int) $cid;
         if(!$cid)
         {
             $this->error("invalid_category");
@@ -207,12 +270,14 @@ class socialgroups
         return $this->category[$cid];
     }
 
-    /* This function loads some permissions about a group.  This should be called after fetching a group. */
+    /** This function loads some permissions about a group.  This should be called after fetching a group.
+     * @param int $gid The id of the group.
+     * @return array An array of permissions.
+     */
 
-    public function load_permissions($gid=1)
+    public function load_permissions(int $gid=1): array
     {
         global $db;
-        $gid = (int) $gid;
         if(array_key_exists($gid, $this->permissions))
         {
             return $this->permissions[$gid];
@@ -225,19 +290,26 @@ class socialgroups
             {
                 $this->permissions[$gid] = array("postthread"=> 1, "postreplies"=> 1, "inviteusers" => 1, "deleteposts" => 0);
             }
-            $this->permissions[$gid] = $db->fetch_array($query);
+            else
+            {
+                $this->permissions[$gid] = $db->fetch_array($query);
+            }
+            return $this->permissions[$gid];
         }
     }
 
 
 
-    /* This function loads the announcements for a group including global announcements. */
+    /** This function loads the announcements for a group including global announcements.
+     * @param int $gid The id of the group.
+     * @param bool $showhidden Whether to show inactive announcements.
+     * @param int $limit How many announcements to fetch.
+     * @return array An array of announcements.
+     */
 
-    public function load_announcements($gid=0, $showhidden=false, $limit=5)
+    public function load_announcements(int $gid=0, bool $showhidden=false, int $limit=5): array
     {
         global $db;
-        $gid = (int) $gid;
-        $limit = (int) $limit;
         if($limit < 1)
         {
             $limit = 1;
@@ -282,193 +354,18 @@ class socialgroups
         return $this->announcements[$gid];
     }
 
-    /*
-    * $gid The id of the group
-    * $page The page to load
-    * $perpage How many to show
-    * $sort An array of options:(field, direction)
-    */
 
-    public function load_threads($gid, $page=1, $perpage=20, $sort=array())
-    {
-        global $mybb, $db;
-        // First we have to see if the user can even see threads.
-        if($mybb->usergroup['isbannedgroup'])
-        {
-            return;
-        }
-        $gid = (int) $gid;
-        if($gid < 1)
-        {
-            $this->error("invalid_group");
-        }
-        $group = $this->load_group($gid);
-        if($group['private'] == 1 && !is_member($gid, $mybb->user['uid']))
-        {
-            return;
-        }
-        $page = (int) $page;
-        if($page < 1 || $page == "") // Fallback to prevent an error
-        {
-            $page = 1;
-        }
-        $perpage = (int) $perpage;
-        if(!$perpage) // Fallback if it was forgotten to avoid an ugly error
-        {
-            $perpage = 20;
-        }
 
-        $start = $page * $perpage - $perpage;
-
-        // Moderators and leaders can view unapproved threads
-        if($this->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']) || $this->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
-        {
-            $visible = 0;
-        }
-        else
-        {
-            $visible = 1;
-        }
-
-        switch($sort['field'])
-        {
-            case "dateline":
-                $sortfield = "t.dateline";
-                break;
-
-            case "username":
-                $sortfield = "u.username";
-                break;
-
-            case "subject":
-                $sortfield = "t.subject";
-                break;
-
-            case "replies":
-                $sortfield = "t.replies";
-                break;
-
-            case "views":
-                $sortfield = "t.views";
-                break;
-
-            default:
-                $sortfield = "t.dateline";
-                break;
-        }
-
-        if($sort['direction'] == "asc")
-        {
-            $sortdirection = "ASC";
-        }
-        else if($sort['direction'] == "desc")
-        {
-            $sortdirection = "DESC";
-        }
-        else
-        {
-            $sortdirection = "DESC";
-        }
-
-        $query = $db->query("SELECT t.*, p.*, u.*
-        FROM " . TABLE_PREFIX . "socialgroup_threads t
-        LEFT JOIN " . TABLE_PREFIX . "socialgroup_posts p ON(t.firstpost=p.pid)
-        LEFT JOIN " . TABLE_PREFIX . "users u ON(t.uid=u.uid)
-        WHERE t.gid=$gid AND t.visible >= $visible
-        ORDER BY t.sticky DESC, $sortfield $sortdirection
-        LIMIT $start , $perpage");
-
-        while($thread = $db->fetch_array($query))
-        {
-            $threads[$thread['tid']] = $thread;
-            // Do the profile links, avatars, and time management here to make it easy to access
-            $thread['formattedname'] = format_name($thread['username'], $thread['usergroup'], $thread['displaygroup']);
-            $thread['profilelink'] = build_profile_link($thread['formattedname'], $thread['uid']);
-            // Only build the avatar if the usercp says yes
-            if($mybb->user['showavatars'])
-            {
-                $thread['avatar'] = format_avatar($thread['avatar'], $thread['avatardimensions']);
-            }
-            $thread['dateline'] = my_date("relative", $thread['dateline']);
-            $thread['lastposttime'] = my_date("relative", $thread['lastposttime']);
-            $this->threads[$gid][$thread['tid']] = $thread;
-        }
-        return $this->threads[$gid];
-    }
-
-    public function load_posts($gid=0, $tid=0, $page=1, $perpage=20)
-    {
-        global $db, $mybb, $cache, $templates, $socialgroups;
-        $gid = (int) $gid;
-        $tid = (int) $tid;
-        if(!$tid)
-        {
-            $this->error("invalid_thread");
-        }
-        if(!$gid)
-        {
-            // Attempt to load from thread.
-            $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
-            $thread = $db->fetch_array($query);
-            $gid = $thread['gid'];
-            $this->thread[$gid][$thread['tid']] = $thread;
-            if(!$gid)
-            {
-                $this->error("invalid_thread");
-            }
-        }
-        $visible = 1;
-        if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
-        {
-            $visible = 0;
-        }
-        $perpage = (int) $perpage;
-        if(!$perpage)
-        {
-            $perpage = 20;
-        }
-        $page = (int) $page;
-        if(!$page || $page < 1)
-        {
-            $page = 1;
-        }
-        if($page > 1)
-        {
-            // We have to figure out how many pages so we don't load any empty set.
-            $countquery = $db->simple_select("socialgroup_posts", "COUNT(pid) as posts", "tid=$tid AND visible >=$visible");
-            $total = $db->fetch_field($countquery, "posts");
-            $pages = ceil($total / $perpage);
-            if($page > $pages)
-            {
-                $page = $pages;
-            }
-        }
-        $start = $page * $perpage - $perpage;
-        $query = $db->query("SELECT p.*, u.*, u.username AS userusername, f.*, t.*, eu.username AS editusername
-        FROM " . TABLE_PREFIX . "socialgroup_posts p
-        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
-        LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
-        LEFT JOIN ".TABLE_PREFIX."userfields f ON (f.ufid=u.uid)
-        LEFT JOIN ".TABLE_PREFIX."users eu ON (eu.uid=p.lasteditby)
-        WHERE p.tid=$tid AND t.visible >=$visible AND p.visible >= $visible
-        ORDER BY p.dateline ASC
-        LIMIT $start , $perpage");
-        while($post = $db->fetch_array($query))
-        {
-            $this->posts[$tid][$post['pid']] = $post;
-        } // End the post loop
-        return $this->posts[$tid];
-    }
-
-    /* This functions returns an array of social groups.
-    * @Param $cid: When not 0, it returns only groups in that category.
-    * @Param $sortfield: What to sort the groups by.
-    * @Param $keywords: The keywords to look for in a group.
-    * @Param $perpage: The number of groups to fetch.  Larger installations will need to test performance.
-    * @Param $currentpage: What page we are currently on.  If not specified, this will be calculated based on
-    * the query string used to get to the page.
-    */
-    public function list_groups($cid=0, $sortfield="", $keywords="", $perpage=50, $currentpage=0)
+    /** This functions returns an array of social groups.
+     * @Param string $cid: When not 0, it returns only groups in that category.
+     * @Param string $sortfield: What to sort the groups by.
+     * @Param string $keywords: The keywords to look for in a group.
+     * @Param int $perpage: The number of groups to fetch.  Larger installations will need to test performance.
+     * @Param int  $currentpage: What page we are currently on.  If not specified, this will be calculated based on
+     * the query string used to get to the page.
+     * @return Array An array of groups.
+     */
+    public function list_groups(string $cid="", string $sortfield="", string $keywords="", int $perpage=50, int $currentpage=0): array
     {
         global $db, $mybb, $lang;
         if($cid)
@@ -497,7 +394,6 @@ class socialgroups
         if($keywords)
         {
             // Check if group names are full text.  If so, use full text syntax.
-            $keywords = (string) $keywords;
             $cleankeywords = $db->escape_string($keywords);
             if($db->is_fulltext("socialgroups", "name"))
             {
@@ -572,8 +468,10 @@ class socialgroups
         return $this->group_list;
     }
 
-    /* This function renders the list of groups.  This should be called after list_groups. */
-    public function render_groups()
+    /** This function renders the list of groups.  This should be called after list_groups.
+     * @return String The HTML content of groups.
+     */
+    public function render_groups(): string
     {
         global $mybb, $templates, $lang;
         if(count($this->group_list) < 1) // Provide a fallback to those who do it wrong.
@@ -605,11 +503,12 @@ class socialgroups
     }
 
 
-    /* This gives an array of viewable categories.
-    * The keys will be the cid while the value is the name.
-    */
+    /** This gives an array of viewable categories.
+     * The keys will be the cid while the value is the name.
+     * @return Array An array of viewable categories.
+     */
 
-    public function get_viewable_categories()
+    public function get_viewable_categories(): array
     {
         global $db, $mybb;
         if(count(array_keys($this->viewable_categories)) >= 1)

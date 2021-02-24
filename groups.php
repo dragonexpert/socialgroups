@@ -11,6 +11,7 @@ $socialgroups = new socialgroups();
 $usergroups = $cache->read("usergroups");
 $members = $socialgroups->socialgroupsuserhandler->load_moderators();
 add_breadcrumb($lang->socialgroups, "groups.php");
+//$socialgroups->update_cache();
 if(count($members['users']) >= 1)
 {
     $query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "uid IN(" . implode($members['users']) . ")");
@@ -83,19 +84,29 @@ if($mybb->input['cid'] >= 0)
 }
 else
 {
-    $cidonly = 0;
+    $cidonly = "";
 }
+
 if($mybb->input['sort'])
 {
     $sort = $db->escape_string($mybb->get_input("sort"));
     $sorturl = "&sort=$sort";
 }
+else
+{
+    $sort = "";
+}
+
 if($mybb->input['keywords'])
 {
     $keywords = $mybb->input['keywords'];
     $keywordsurl = "&keywords=$keywords";
 }
-$groups = $socialgroups->list_groups($cidonly, $sort, $keywords);
+else
+{
+    $keywords = "";
+}
+$groups = $socialgroups->list_groups((string) $cidonly, $sort, $keywords);
 $grouphtml = $socialgroups->render_groups();
 if($cidonly || $keywords)
 {

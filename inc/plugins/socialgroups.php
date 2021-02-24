@@ -55,3 +55,10 @@ function socialgroups_uninstall()
     require_once "socialgroups/settings.php";
     socialgroups_delete_settings();
 }
+
+function update_socialgroups()
+{
+    require_once "socialgroups/classes/socialgroups.php";
+    $socialgroups = new socialgroups(0, false, false, false, false);
+    $socialgroups->update_cache();
+}

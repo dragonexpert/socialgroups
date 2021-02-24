@@ -17,7 +17,6 @@ require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $lang->load("forumdisplay");
 $uid = $mybb->user['uid'];
 $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
-$mybb->usergroup['cancp'] = 1;
 $socialgroups = new socialgroups($gid, 1, 1, 1);
 add_breadcrumb($lang->socialgroups, "groups.php");
 $groupinfo = $socialgroups->load_group($gid);
@@ -279,7 +278,7 @@ if($mybb->input['direction'])
     $directionurl = "&direction=" . $mybb->get_input("direction");
 }
 $pagination = multipage($threadcount, 20, $page, "showgroup.php?gid=$gid". $sorturl . $directionurl);
-$threadlist = $socialgroups->load_threads($gid, $page, 20, array("field" => $mybb->get_input("sort"), "direction" => $mybb->get_input("direction")));
+$threadlist = $socialgroups->socialgroupsthreadhandler->load_threads($gid, $page, 20, array("field" => $mybb->get_input("sort"), "direction" => $mybb->get_input("direction")));
 $colspan = 4;
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
