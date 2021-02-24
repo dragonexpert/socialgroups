@@ -237,9 +237,9 @@ if($mybb->settings['socialgroups_showgroupjump'] && $mybb->user['uid'] > 0)
         $groupdata['name'] = htmlspecialchars_uni($groupdata['name']);
         eval("\$groupoptions .=\"".$templates->get("socialgroups_groupjump_group")."\";");
     }
+    $db->free_result($query);
     eval("\$groupjumpmenu =\"".$templates->get("socialgroups_groupjump")."\";");
 }
-$db->free_result($query);
 $plugins->run_hooks("groupthread_end");
 eval("\$groupthreadpage =\"".$templates->get("socialgroups_groupthread_page")."\";");
 // Before outputting the page, we need to replace certain values that are spawned from using build_ppostbit.
