@@ -3,40 +3,68 @@
  * Socialgroups plugin created by Mark Janssen.
  * This is not a free plugin.
  */
+if(!defined("IN_MYBB"))
+{
+    die("Direct access not allowed.");
+}
+if(!$mybb->input['action'])
+{
+    $mybb->input['action'] = "browse";
+}
 
-$page->output_header("Social Group Announcements");
-$baseurl = "index.php?module=socialgroups-announcements";
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
-$table = new TABLE;
+$page->output_header("Social Group Announcements");
 
-$sub_tabs = array(
-    "browse" => array(
-        "title" => "Browse",
-        "link" => $baseurl),
-    "create" => array(
-        "title" => "Create",
-        "link" => $baseurl . "&action=add"
-    )
+$baseurl = "index.php?module=socialgroups-announcements";
+
+// Default Routes Always There
+$sub_tabs['browse'] = array(
+    'title'         => 'Browse',
+    'link'          => $baseurl,
+    'description'   => 'Browse Announcements'
 );
 
-$page->output_nav_tabs($sub_tabs);
+$sub_tabs['create'] = array(
+    'title'         => 'Create Announcement',
+    'link'          => $baseurl . '&action=add',
+    'description'   => 'Create an Announcement'
+);
+
+$table = new TABLE;
 
 switch($mybb->input['action'])
 {
     case "browse":
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_announcements_browse();
         break;
     case "edit":
+        $sub_tabs['edit'] = array(
+            'title'         => 'Edit Announcement',
+            'link'          => $baseurl . '&action=edit&aid='.$mybb->input['aid'],
+            'description'   => 'Edit an Announcement'
+        );
+
+        $page->output_nav_tabs($sub_tabs, 'edit');
         socialgroups_announcement_edit($mybb->input['aid']);
         break;
     case "add":
+        $page->output_nav_tabs($sub_tabs, 'create');
         socialgroups_announcement_add();
         break;
     case "delete":
+        $sub_tabs['delete'] = array(
+            'title'         => 'Delete Category',
+            'link'          => $baseurl . '&action=delete&aid='.$mybb->input['aid'],
+            'description'   => 'Delete an Announcement'
+        );
+
+        $page->output_nav_tabs($sub_tabs, 'delete');
         socialgroups_announcement_delete($mybb->input['aid']);
         break;
     default:
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_announcements_browse();
         break;
 }
