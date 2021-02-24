@@ -16,9 +16,10 @@ require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $lang->load("forumdisplay");
 $uid = $mybb->user['uid'];
-$socialgroups = new socialgroups($mybb->get_input("gid", MyBB::INPUT_INT), 1, 1, 1);
+$gid = $mybb->get_input("gid", MyBB::INPUT_INT);
+$mybb->usergroup['cancp'] = 1;
+$socialgroups = new socialgroups($gid, 1, 1, 1);
 add_breadcrumb($lang->socialgroups, "groups.php");
-$gid = (int) $mybb->input['gid'];
 $groupinfo = $socialgroups->load_group($gid);
 $cid = $socialgroups->group[$gid]['cid'];
 $title = stripcslashes($socialgroups->group[$gid]['name']);
@@ -27,12 +28,12 @@ add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), "showgroup.php
 $members = $socialgroups->socialgroupsuserhandler->members[$gid];
 $leaders = $socialgroups->socialgroupsuserhandler->leaders[$gid];
 $canviewgroup = 1;
-if($groupinfo['private'] && !$socialgroups->socialgroupsuserhandler->is_member($groupinfo['gid'], $mybb->user['uid'])
-    && !$socialgroups->socialgroupsuserhandler->is_moderator($groupinfo['gid'], $mybb->user['uid']))
+if($groupinfo['private'] && !$socialgroups->socialgroupsuserhandler->is_member($gid, $mybb->user['uid'])
+    && !$socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
 {
     $canviewgroup = 0;
 }
-if($groupinfo['staffonly'] && !$mybb->user['canmodcp'])
+if($groupinfo['staffonly'] && !$mybb->usergroup['canmodcp'])
 {
     $canviewgroup = 0;
 }
@@ -68,7 +69,8 @@ if($mybb->input['action'] == "leavegroup")
     $message = $lang->socialgroups_left_group;
     redirect("showgroup.php?gid=$gid", $message);
 }
-if($socialgroups->socialgroupsuserhandler->is_leader($uid, $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+
+if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$editgrouplink =\"".$templates->get("socialgroups_edit_group_link")."\";");
     $announcementmoderator = 1;
@@ -106,7 +108,7 @@ if($mybb->input['action'] && $mybb->request_method == "post" && verify_post_chec
     {
         error("Invalid action");
     }
-    if(!$socialgroups->socialgroupsuserhandler->is_leader($uid, $gid) && !$socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+    if(!$socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) && !$socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
     {
         error_no_permission();
     }
@@ -241,7 +243,7 @@ foreach($socialgroups->announcements[$gid] as $announcement)
 }
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
 // Thread time
-if($socialgroups->socialgroupsuserhandler->is_leader($mybb->user['uid'], $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
 }
@@ -253,7 +255,7 @@ if(!$mybb->input['page'] || $mybb->input['page'] < 1)
 {
     $page = 1;
 }
-if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_leader($mybb->user['uid'], $gid))
+if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_leader($gid, $uid))
 {
     $visible = -1;
 }
@@ -279,7 +281,7 @@ if($mybb->input['direction'])
 $pagination = multipage($threadcount, 20, $page, "showgroup.php?gid=$gid". $sorturl . $directionurl);
 $threadlist = $socialgroups->load_threads($gid, $page, 20, array("field" => $mybb->get_input("sort"), "direction" => $mybb->get_input("direction")));
 $colspan = 4;
-if($socialgroups->socialgroupsuserhandler->is_leader($uid, $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     ++$colspan;
 }
@@ -308,7 +310,7 @@ foreach($threadlist as $thread)
     {
         $lockicon = "";
     }
-    if($socialgroups->socialgroupsuserhandler->is_leader($uid, $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+    if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
     {
         eval("\$inlinecheckbox =\"".$templates->get("socialgroups_inline_checkbox")."\";");
     }
@@ -332,7 +334,7 @@ foreach($threadlist as $thread)
     eval("\$threads .=\"".$templates->get("socialgroups_thread_thread")."\";");
     $stickybit= "";
 }
-if($socialgroups->socialgroupsuserhandler->is_leader($uid, $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$modtools =\"".$templates->get("socialgroups_mod_tools")."\";");
     eval("\$addannouncementlink =\"".$templates->get("socialgroups_add_announcement_link")."\";");
@@ -356,7 +358,7 @@ if(!$canviewgroup)
 }
 // Group jump menu
 $groupjumpmenu = "";
-if($mybb->settings['socialgroups_showgroupjump'])
+if($mybb->settings['socialgroups_showgroupjump'] && $uid > 0)
 {
     $query = $db->query("SELECT m.gid, g.name FROM " . TABLE_PREFIX . "socialgroup_members m
     LEFT JOIN " . TABLE_PREFIX . "socialgroups g ON(m.gid=g.gid)
