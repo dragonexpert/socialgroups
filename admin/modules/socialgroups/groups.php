@@ -18,36 +18,57 @@ require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
 $page->output_header("Social Groups");
 $baseurl = "index.php?module=socialgroups-groups";
-$sub_tabs = array(
-    "browse" => array(
-        "title" => "Browse",
-        "link" => $baseurl),
-    "create" => array(
-        "title" => "Create",
-        "link" => $baseurl . "&action=add"
-    )
+
+// Default Routes Always There
+$sub_tabs['browse'] = array(
+    'title'         => 'Browse',
+    'link'          => $baseurl,
+    'description'   => 'Browse Social Groups'
 );
 
-$page->output_nav_tabs($sub_tabs);
+$sub_tabs['create'] = array(
+    'title'         => 'Create Group',
+    'link'          => $baseurl . '&action=add',
+    'description'   => 'Create a Social Group'
+);
+
 $table = new TABLE;
 
 switch($mybb->input['action'])
 {
     case "browse":
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_group_browse();
         break;
     case "edit":
         $gid = (int)$mybb->input['gid'];
+        $sub_tabs['edit'] = array(
+            'title'         => 'Edit Group',
+            'link'          => $baseurl . '&action=edit&gid='.$gid,
+            'description'   => 'Edit a Social Group'
+        );
+
+        $page->output_nav_tabs($sub_tabs, 'edit');
         socialgroups_group_edit($gid);
         break;
     case "add":
+        $page->output_nav_tabs($sub_tabs, 'create');
         socialgroups_group_add();
         break;
     case "delete":
-        socialgroups_group_delete($mybb->input['gid']);
+        $gid = (int)$mybb->input['gid'];
+        $sub_tabs['delete'] = array(
+            'title'         => 'Delete Group',
+            'link'          => $baseurl . '&action=delete&gid='.$gid,
+            'description'   => 'Delete a Social Group'
+        );
+
+        $page->output_nav_tabs($sub_tabs, 'delete');
+        socialgroups_group_delete($gid);
         break;
     default:
         $plugins->run_hooks("admin_socialgroups_group_action");
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_group_browse();
         break;
 }

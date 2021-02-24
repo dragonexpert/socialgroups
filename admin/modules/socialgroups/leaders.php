@@ -3,37 +3,60 @@
  * Socialgroups plugin created by Mark Janssen.
  * This is not a free plugin.
  */
+if(!defined("IN_MYBB"))
+{
+    die("Direct access not allowed.");
+}
+if(!$mybb->input['action'])
+{
+    $mybb->input['action'] = "browse";
+}
 
-$baseurl = "index.php?module=socialgroups-leaders";
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
-$table = new TABLE;
 $page->output_header("Social Group Leaders");
-$sub_tabs = array(
-    "browse" => array(
-        "title" => "Browse",
-        "link" => $baseurl),
-    "create" => array(
-        "title" => "Add Leader",
-        "link" => $baseurl . "&action=add"
-    )
+
+$baseurl = "index.php?module=socialgroups-leaders";
+
+// Default Routes Always There
+$sub_tabs['browse'] = array(
+    'title'         => 'Browse',
+    'link'          => $baseurl,
+    'description'   => 'Browse Leaders'
 );
 
-$page->output_nav_tabs($sub_tabs);
+$sub_tabs['create'] = array(
+    'title'         => 'Add Leader',
+    'link'          => $baseurl . '&action=add',
+    'description'   => 'Add a Leader'
+);
+
+$table = new TABLE;
 
 switch($mybb->input['action'])
 {
     case "browse":
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_leaders_browse();
         break;
     case "add":
+        $page->output_nav_tabs($sub_tabs, 'create');
         socialgroups_leaders_add();
         break;
     case "delete":
+        $sub_tabs['delete'] = array(
+            'title'         => 'Remove Leader',
+            'link'          => $baseurl . '&action=delete&lid='.$mybb->input['lid'],
+            'description'   => 'Remove a Leader'
+        );
+
+        $page->output_nav_tabs($sub_tabs, 'delete');
         socialgroups_leaders_delete($mybb->input['lid']);
         break;
     default:
+        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_leaders_browse();
+        break;
 }
 
 function socialgroups_leaders_browse()
