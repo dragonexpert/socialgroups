@@ -24,6 +24,7 @@ function socialgroups_create_tables()
     private INT NOT NULL DEFAULT 0,
     staffonly INT NOT NULL DEFAULT 0,
     inviteonly INT NOT NULL DEFAULT 0,
+    jointype INT NOT NULL DEFAULT 0,
     uid INT NOT NULL DEFAULT 1,
     threads INT NOT NULL DEFAULT 0,
     posts INT NOT NULL DEFAULT 0,
