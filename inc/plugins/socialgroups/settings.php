@@ -55,6 +55,26 @@ function socialgroups_insert_settings()
         "gid" => $gid
     );
 
+    $new_settings[] = array(
+        "name" => "socialgroups_seo_urls",
+        "title" => "Social Groups SEO Urls",
+        "description" => "If set to yes, changes the urls to be SEO friendly for social groups.",
+        "optionscode" => "yesno",
+        "disporder" => 4,
+        "value" => 0,
+        "gid" => $gid
+    );
+
+    $new_settings[] = array(
+        "name" => "socialgroups_thread_avatar",
+        "title" => $db->escape_string("Show Thread Starter's Avatar"),
+        "description" => "When enabled, this shows the avatar of the person who created a thread on showgroup.php.",
+        "optionscode" => "yesno",
+        "disporder" => 5,
+        "value" => 1,
+        "gid" => $gid
+    );
+
     $db->insert_query_multiple("settings", $new_settings);
     rebuild_settings();
 }

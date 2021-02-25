@@ -1,0 +1,16 @@
+<tr class="inline_row" id="thread{$thread['tid']}">
+        <td class="{$unapprovedshade}" style="width:24px">{$lockicon}</td>
+        <td class="{$unapprovedshade}">{$stickybit}{$thread['threadlink']} &nbsp; <a href="#thread{$thread['tid']}" onclick="previewthread({$thread['tid']})" />Preview</a>
+        <div style="display:none" id="threadpreview{$thread['tid']}">{$thread['message']}
+        <br />
+        <a href="{$mybb->settings['bburl']}/groupthread.php?tid={$thread['tid']}">Load Thread</a>
+        </div>
+        <br />
+        <span class="smalltext">Started by: {$thread['profilelink']}
+<br />{$threadavatar}<br />
+        {$thread['dateline']}</span>
+        </td>
+        <td class="{$unapprovedshade}">{$thread['replies']}</td>
+        <td class="{$unapprovedshade}">{$thread['lastposttime']}</td>
+        {$inlinecheckbox}
+        </tr>
