@@ -645,30 +645,33 @@ class socialgroups
         }
         $html = "";
         $currentcid = 0;
-        foreach($this->group_list as $mainkey => $value)
+        if(is_array($this->group_list))
         {
-            foreach($this->group_list[$mainkey] as $subkey)
+            foreach ($this->group_list as $mainkey => $value)
             {
-                if($subkey['cid'] != $currentcid)
+                foreach ($this->group_list[$mainkey] as $subkey)
                 {
-                    $subkey['category_link'] = $this->categorylink($subkey['cid'], $subkey['category']);
-                    eval("\$html .=\"".$templates->get("socialgroups_category")."\";");
-                    $currentcid = $subkey['cid'];
-                    $subkey['category_link'] = "";
+                    if ($subkey['cid'] != $currentcid)
+                    {
+                        $subkey['category_link'] = $this->categorylink($subkey['cid'], $subkey['category']);
+                        eval("\$html .=\"" . $templates->get("socialgroups_category") . "\";");
+                        $currentcid = $subkey['cid'];
+                        $subkey['category_link'] = "";
+                    }
+                    if ($subkey['logo'] != "")
+                    {
+                        $groupinfo['logo'] = $subkey['logo'];
+                        eval("\$group_logo =\"" . $templates->get("socialgroups_logo") . "\";");
+                    }
+                    $subkey['group_link'] = $this->grouplink($subkey['gid'], $subkey['name']);
+                    eval("\$html .=\"" . $templates->get("socialgroups_group") . "\";");
+                    $group_logo = "";
+                    $subkey['group_link'] = "";
                 }
-                if($subkey['logo'] != "")
-                {
-                    $groupinfo['logo'] = $subkey['logo'];
-                    eval("\$group_logo =\"".$templates->get("socialgroups_logo")."\";");
-                }
-                $subkey['group_link'] = $this->grouplink($subkey['gid'], $subkey['name']);
-                eval("\$html .=\"".$templates->get("socialgroups_group")."\";");
-                $group_logo = "";
-                $subkey['group_link'] = "";
+                eval("\$html .=\"" . $templates->get("socialgroups_category_split") . "\";");
             }
-            eval("\$html .=\"".$templates->get("socialgroups_category_split")."\";");
+            return $html;
         }
-        return $html;
     }
 
 
@@ -685,21 +688,27 @@ class socialgroups
             return $this->viewable_categories;
         }
         $categories = $cache->read("socialgroups_categories");
-        foreach($categories as $category)
+        if(is_array($categories))
         {
-            if($category['staffonly'] == 1 && $mybb->usergroup['canmodcp'] || $category['staffonly'] == 0)
+            foreach ($categories as $category)
+            {
+                if ($category['staffonly'] == 1 && $mybb->usergroup['canmodcp'] || $category['staffonly'] == 0)
+                {
+                    $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
+                }
+            }
+        }
+        else
+        {
+
+            $query = $db->simple_select("socialgroup_categories", "cid, name", "staffonly <= " . $mybb->usergroup['canmodcp']);
+            $this->viewable_categories = array();
+            while ($category = $db->fetch_array($query))
             {
                 $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
             }
+            $db->free_result($query);
         }
-        /*
-        $query = $db->simple_select("socialgroup_categories", "cid, name", "staffonly <= " . $mybb->usergroup['canmodcp']);
-        while($category = $db->fetch_array($query))
-        {
-            $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
-        }
-        $db->free_result($query);
-        */
         return $this->viewable_categories;
     }
 
