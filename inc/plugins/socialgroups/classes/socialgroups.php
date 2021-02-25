@@ -498,7 +498,7 @@ class socialgroups
         if($gid == 0)
         {
             // Order by gid first because 0 are global and therefore, most likely important as they are admin set.
-            $query = $db->query("SELECT a.*, u.username, u.usergroup, u.displaygroup
+            $query = $db->query("SELECT a.*, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions
             FROM " . TABLE_PREFIX . "socialgroup_announcements a
             LEFT JOIN " . TABLE_PREFIX . "users u ON(a.uid=u.uid)
             WHERE active=1 $hidden
