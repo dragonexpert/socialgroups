@@ -1,0 +1,8 @@
+<tr>
+        <td class="trow2"><span onclick="showannouncement({$announcement['aid']})"><a href="#announcement{$announcement['aid']}">{$announcement['subject']}</a></span>
+        <div id="announcement{$announcement['aid']}" style="display:none">{$announcement['message']}</div>
+        <br />
+        <span class="smalltext">{$announcement['profilelink']}</span><br />{$announcementavatar}
+        <td class="trow2" colspan="{$announcementcolspan}">{$announcement['dateline']}</td>
+        {$announcementmanage}
+        </tr>
