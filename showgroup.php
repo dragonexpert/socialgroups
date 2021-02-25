@@ -11,6 +11,7 @@ $templatelist .= ",socialgroups_mod_column,socialgroups_inline_checkbox,socialgr
 $templatelist .= ",socialgroups_new_thread,socialgroups_new_thread_link,codebuttons, smilieinsert_getmore, smilieinsert_smilie, smilieinsert,forumdisplay_sticky_sep";
 $templatelist .= ",forumdisplay_threads_sep,socialgroups_no_threads,socialgroups_edit_group_link,socialgroups_announcement_manage,socialgroups_add_announcement_link";
 $templatelist .= ",socialgroups_manage_link,socialgroups_logo,socialgroups_groupjump,socialgroups_groupjump_group";
+$templatelist .= ",forumdisplay_usersbrowsing_user";
 require_once "global.php";
 require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -201,6 +202,10 @@ while($groupmember = $db->fetch_array($leaderquery))
     eval("\$leaderlist .= \"".$templates->get("socialgroups_member")."\";");
     $comma = ", ";
 }
+
+// Gather the who's online
+$socialgroups->socialgroupsuserhandler->viewing_group($gid);
+
 // New thread button
 $socialgroups->load_permissions($gid);
 $permissions = $socialgroups->permissions[$gid];
