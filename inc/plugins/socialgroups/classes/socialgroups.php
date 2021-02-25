@@ -49,6 +49,14 @@ class socialgroups
 
     public $posts = array();
 
+    public $socialgroupsdatahandler;
+
+    public $socialgroupsreports;
+
+    public $socialgroupsthreadhandler;
+
+    public $socialgroupsuserhandler;
+
     /**
      * socialgroups constructor.
      * This funciton loads all information about our socialgroups object.

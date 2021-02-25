@@ -41,7 +41,8 @@ function socialgroups_create_tables()
     $db->query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "socialgroup_members (
     mid INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     gid INT NOT NULL DEFAULT 1,
-    uid INT NOT NULL DEFAULT 1
+    uid INT NOT NULL DEFAULT 1,
+    dateline BIGINT NOT NULL DEFAULT 0
     ) ENGINE = Innodb $charset");
 
     $db->query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "socialgroup_member_permissions (
