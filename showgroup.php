@@ -343,7 +343,6 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
         eval("\$managegrouplink =\"".$templates->get("socialgroups_manage_link")."\";");
     }
 }
-$plugins->run_hooks("showgroup_end");
 if($groupinfo['logo'])
 {
     eval("\$grouplogo =\"".$templates->get("socialgroups_logo")."\";");
@@ -370,5 +369,6 @@ if($mybb->settings['socialgroups_showgroupjump'] && $uid > 0)
     }
     eval("\$groupjumpmenu =\"".$templates->get("socialgroups_groupjump")."\";");
 }
+$plugins->run_hooks("showgroup_end");
 eval("\$showgrouppage =\"".$templates->get("socialgroups_showgroup_page")."\";");
 output_page($showgrouppage);
