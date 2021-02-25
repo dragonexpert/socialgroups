@@ -336,6 +336,7 @@ class socialgroups
                     $groups[$gid]['description'] = htmlspecialchars_uni($groups[$gid]['description']);
                     $groups[$gid]['logo'] = htmlspecialchars_uni($groups[$gid]['logo']);
                     $this->group[$gid] = $groups[$gid];
+                    $plugins->run_hooks("class_socialgroups_load_group", $groups);
                     return $groups[$gid];
                 }
                 else
@@ -374,12 +375,13 @@ class socialgroups
 
     /** This function loads a category.  Typically called after loading a group.
      * @param int $cid The id of the category.
+     * @param bool $use_cache Whether to load from cache.
      * @return array An array of category information.
      */
 
-    public function load_category(int $cid=1): array
+    public function load_category(int $cid=1, bool $use_cache = true): array
     {
-        global $db;
+        global $db, $cache;
         if(!$cid)
         {
             $this->error("invalid_category");
@@ -388,14 +390,47 @@ class socialgroups
         {
             return $this->category[$cid];
         }
-        $query = $db->simple_select("socialgroup_categories", "*", "cid=$cid");
-        if(!$db->num_rows($query))
+        if($use_cache)
         {
-            $this->error("invalid_category");
+            $categories = $cache->read("socialgroups_categories");
+            $this->category = $categories;
+            if(is_array($categories))
+            {
+                if(array_key_exists($cid, $categories))
+                {
+                    return $categories[$cid];
+                }
+                else
+                {
+                    $this->error("invalid_category");
+                }
+            }
+            else
+            {
+                $this->update_socialgroups_category_cache();
+                $categories = $cache->read("socialgroups_categories");
+                if(!array_key_exists($cid, $categories))
+                {
+                    $this->error("invalid_category");
+                }
+                else
+                {
+                    $this->category = $categories;
+                    return $categories[$cid];
+                }
+            }
         }
-        $this->category[$cid] = $db->fetch_array($query);
-        $db->free_result($query);
-        return $this->category[$cid];
+        else
+        {
+            $query = $db->simple_select("socialgroup_categories", "*", "cid=$cid");
+            if (!$db->num_rows($query))
+            {
+                $this->error("invalid_category");
+            }
+            $this->category[$cid] = $db->fetch_array($query);
+            $db->free_result($query);
+            return $this->category[$cid];
+        }
     }
 
     /** This function loads some permissions about a group.  This should be called after fetching a group.
@@ -644,17 +679,27 @@ class socialgroups
 
     public function get_viewable_categories(): array
     {
-        global $db, $mybb;
+        global $db, $mybb, $cache;
         if(count(array_keys($this->viewable_categories)) >= 1)
         {
             return $this->viewable_categories;
         }
+        $categories = $cache->read("socialgroups_categories");
+        foreach($categories as $category)
+        {
+            if($category['staffonly'] == 1 && $mybb->usergroup['canmodcp'] || $category['staffonly'] == 0)
+            {
+                $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
+            }
+        }
+        /*
         $query = $db->simple_select("socialgroup_categories", "cid, name", "staffonly <= " . $mybb->usergroup['canmodcp']);
         while($category = $db->fetch_array($query))
         {
             $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
         }
         $db->free_result($query);
+        */
         return $this->viewable_categories;
     }
 
@@ -674,5 +719,23 @@ class socialgroups
         }
         $db->free_result($query);
         $cache->update("socialgroups", $data);
+    }
+
+
+    /**
+     * This function updates the cache for socialgroup categories.
+     * This will help for performance.
+     */
+    public function update_socialgroups_category_cache()
+    {
+        global $db, $cache;
+        $data = array();
+        $query = $db->simple_select("socialgroup_categories", "*");
+        while($category = $db->fetch_array($query))
+        {
+            $data[$category['cid']] = $category;
+        }
+        $db->free_result($query);
+        $cache->update("socialgroups_categories", $data);
     }
 }
