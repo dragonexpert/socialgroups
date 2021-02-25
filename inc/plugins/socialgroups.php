@@ -62,3 +62,10 @@ function update_socialgroups()
     $socialgroups = new socialgroups(0, false, false, false, false);
     $socialgroups->update_cache();
 }
+
+function update_socialgroups_categories()
+{
+    require_once "socialgroups/classes/socialgroups.php";
+    $socialgroups = new socialgroups(0, false, false, false, false);
+    $socialgroups->update_socialgroups_category_cache();
+}
