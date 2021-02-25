@@ -433,6 +433,7 @@ class socialgroupsthreadhandler
             // Do the profile links, avatars, and time management here to make it easy to access
             $thread['formattedname'] = format_name($thread['username'], $thread['usergroup'], $thread['displaygroup']);
             $thread['profilelink'] = build_profile_link($thread['formattedname'], $thread['uid']);
+            $thread['lastposter_profilelink'] = build_profile_link($thread['lastpostusername'],$thread['lastpostuid']);
             // Only build the avatar if the usercp says yes
             if($mybb->user['showavatars'])
             {
