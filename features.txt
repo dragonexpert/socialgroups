@@ -13,7 +13,7 @@ Groups
 - List users browsing
 
 Showgroup
-- List users browsing group
+- List users browsing group * Complete *
 - List Group Members * Complete *
 - List Group Leaders * Complete *
 - Show Global Announcements * Complete *
