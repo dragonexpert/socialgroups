@@ -38,7 +38,7 @@ $cutoff = TIME_NOW - 900; // 15 minutes
 $query = $db->query("SELECT s.*, u.username, u.usergroup, u.displaygroup FROM
 		" . TABLE_PREFIX . "sessions s
 		LEFT JOIN " . TABLE_PREFIX . "users u ON s.uid=u.uid
-		WHERE time >= $cutoff AND s.uid !=0 AND location LIKE '%groups.php\?'
+		WHERE s.time >= $cutoff AND s.uid !=0 AND s.location LIKE '%groups.php%'
 		ORDER BY u.username ASC");
 
 while($user = $db->fetch_array($query))
