@@ -107,6 +107,7 @@ function socialgroups_create_tables()
     dateline BIGINT NOT NULL DEFAULT 0,
     lastedit BIGINT NOT NULL DEFAULT 0,
     lasteditby INT NOT NULL DEFAULT 0,
+    editcount INT NOT NULL DEFAULT 0,
     reported INT NOT NULL DEFAULT 0,
     visible INT NOT NULL DEFAULT 1,
     ipaddress VARBINARY(16) NOT NULL DEFAULT '',
