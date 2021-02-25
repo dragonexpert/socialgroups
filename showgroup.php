@@ -11,7 +11,7 @@ $templatelist .= ",socialgroups_mod_column,socialgroups_inline_checkbox,socialgr
 $templatelist .= ",socialgroups_new_thread,socialgroups_new_thread_link,codebuttons, smilieinsert_getmore, smilieinsert_smilie, smilieinsert,forumdisplay_sticky_sep";
 $templatelist .= ",forumdisplay_threads_sep,socialgroups_no_threads,socialgroups_edit_group_link,socialgroups_announcement_manage,socialgroups_add_announcement_link";
 $templatelist .= ",socialgroups_manage_link,socialgroups_logo,socialgroups_groupjump,socialgroups_groupjump_group";
-$templatelist .= ",forumdisplay_usersbrowsing_user";
+$templatelist .= ",forumdisplay_usersbrowsing_user,socialgroups_avatar";
 require_once "global.php";
 require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -243,6 +243,14 @@ foreach($socialgroups->announcements[$gid] as $announcement)
             $announcementcolspan = 3;
         }
     }
+    $announcementavatar = "";
+    if($mybb->settings['socialgroups_thread_avatar'])
+    {
+        $avatar = $announcement['avatar'];
+        $avatarurl = $avatar['image'];
+        $dimensions = $avatar['width_height'];
+        eval("\$announcementavatar =\"".$templates->get("socialgroups_avatar")."\";");
+    }
     eval("\$announcements .=\"".$templates->get("socialgroups_announcement_announcement")."\";");
 }
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
@@ -334,6 +342,15 @@ foreach($threadlist as $thread)
         $shownormalsep = false;
     }
     $plugins->run_hooks("showgroup_thread");
+    $threadavatar = "";
+    if($mybb->settings['socialgroups_thread_avatar'])
+    {
+        $avatar = $thread['avatar'];
+        $avatarurl = $avatar['image'];
+        $dimensions = $avatar['width_height'];
+        $profilelink = $thread['profilelink'];
+        eval("\$threadavatar =\"".$templates->get("socialgroups_avatar")."\";");
+    }
     $thread['message'] = $parser->parse_message($thread['message'], $parser_options);
     $thread['threadlink'] = $socialgroups->groupthreadlink($thread['tid'], $thread['subject']);
     eval("\$threads .=\"".$templates->get("socialgroups_thread_thread")."\";");
