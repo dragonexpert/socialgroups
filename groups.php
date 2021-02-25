@@ -9,9 +9,9 @@ $lang->load("socialgroups");
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
 $usergroups = $cache->read("usergroups");
+$categoryinfo = $cache->read("socialgroups_categories");
 $members = $socialgroups->socialgroupsuserhandler->load_moderators();
 add_breadcrumb($lang->socialgroups, "groups.php");
-//$socialgroups->update_cache();
 if(count($members['users']) >= 1)
 {
     $query = $db->simple_select("users", "uid, username, usergroup, displaygroup", "uid IN(" . implode($members['users']) . ")");
@@ -40,12 +40,14 @@ $query = $db->query("SELECT s.*, u.username, u.usergroup, u.displaygroup FROM
 		LEFT JOIN " . TABLE_PREFIX . "users u ON s.uid=u.uid
 		WHERE time >= $cutoff AND s.uid !=0 AND location LIKE '%groups.php\?'
 		ORDER BY u.username ASC");
+
 while($user = $db->fetch_array($query))
 {
     $profilelink = build_profile_link(format_name(htmlspecialchars_uni($user['username']), $user['usergroup'], $user['displaygroup']), $user['uid']);
     $userbrowsing .= $comma . $profilelink;
     $comma = ", ";
 }
+
 // Count guests now.
 $countquery = $db->simple_select("sessions", "COUNT(sid) as guestcount", "time >=$cutoff AND uid=0 AND location LIKE '%groups.php\?'");
 $guestcount = $db->fetch_field($countquery, "guestcount");
@@ -53,48 +55,35 @@ if($guestcount)
 {
     $userbrowsing .= ", and $guestcount guests";
 }
-// Lets show off the groups
-// .htaccess stuff
-if($mybb->input['category'])
+
+// Is there a category already set?
+if($mybb->get_input("cid"))
 {
-    $category = $mybb->get_input("category");
-    $query = $db->simple_select("socialgroup_categories", "*", "name='$category'");
-    $categoryinfo = $db->fetch_array($query);
-    if($categoryinfo['staffonly'] > $mybb->usergroup['canmodcp']) // Eliminate the filter if they don't have permission to view.
+    $cidonly = $db->escape_string($mybb->get_input("cid"));
+    // If it is staff only and they aren't staff, unset it.
+    if($categoryinfo[$cidonly]['staffonly'] && !$mybb->usergroup['canmodcp'])
     {
+        $cidonly = 0;
         $mybb->input['cid'] = 0;
-    }
-    if($categoryinfo['cid'])
-    {
-        $mybb->input['cid'] = $categoryinfo['cid'];
-        add_breadcrumb(stripcslashes($categoryinfo['name']), "groups.php?cid=" . $mybb->input['cid']);
     }
     else
     {
-        $mybb->input['cid'] = 0;
+        add_breadcrumb(stripcslashes($categoryinfo[$cidonly]['name']), $socialgroups->breadcrumb_link("category", $cidonly, $categoryinfo[$cidonly]['name']));
     }
-}
-
-// Is there a category already set?
-$mybb->input['cid'] = $db->escape_string($mybb->get_input("cid")); // Escape String is used to allow for csv lists of allowed categories
-if($mybb->input['cid'] >= 0)
-{
-    $cidonly = $mybb->input['cid'];
-    add_breadcrumb(stripcslashes($categoryinfo['name']), "groups.php?cid=" . $mybb->input['cid']);
 }
 else
 {
     $cidonly = "";
 }
 
-if($mybb->input['sort'])
+if($mybb->get_input("sort"))
 {
     $sort = $db->escape_string($mybb->get_input("sort"));
     $sorturl = "&sort=$sort";
 }
 else
 {
-    $sort = "";
+    $sort = $sorturl = "";
 }
 
 if($mybb->input['keywords'])
@@ -104,8 +93,9 @@ if($mybb->input['keywords'])
 }
 else
 {
-    $keywords = "";
+    $keywords = $keywordsurl = "";
 }
+
 $groups = $socialgroups->list_groups((string) $cidonly, $sort, $keywords);
 $grouphtml = $socialgroups->render_groups();
 if($cidonly || $keywords)
