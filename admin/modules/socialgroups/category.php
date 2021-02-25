@@ -15,67 +15,60 @@ if(!$mybb->input['action'])
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
 $page->output_header("Social Group Categories");
-
 $baseurl = "index.php?module=socialgroups-category";
-
-// Default Routes Always There
 $sub_tabs['browse'] = array(
-    'title'         => 'Browse',
-    'link'          => $baseurl,
-    'description'   => 'Browse Social Groups Categories'
-);
+        "title" => "Browse",
+        "link" => $baseurl,
+        "description" => "Browse categories."
+    );
 
 $sub_tabs['create'] = array(
-    'title'         => 'Create Category',
-    'link'          => $baseurl . '&action=add',
-    'description'   => 'Create a Social Groups Category'
-);
+        "title" => "Create",
+        "link" => $baseurl . "&action=add",
+        "description" => "Create categories."
+    );
 
 $table = new TABLE;
 
 switch($mybb->input['action'])
 {
     case "browse":
-        $page->output_nav_tabs($sub_tabs, 'browse');
+        $page->output_nav_tabs($sub_tabs, "browse");
         socialgroups_category_browse();
         break;
     case "edit":
         $sub_tabs['edit'] = array(
-            'title'         => 'Edit Category',
-            'link'          => $baseurl . '&action=edit&cid='.$mybb->input['cid'],
-            'description'   => 'Edit a Social Groups Category'
+            "title" => "Edit",
+            "link" => $baseurl . "&action=edit&cid=" . $mybb->get_input("cid"),
+            "description" => "Editing category."
         );
-
-        $page->output_nav_tabs($sub_tabs, 'edit');
+        $page->output_nav_tabs($sub_tabs, "edit");
         socialgroups_category_edit($mybb->input['cid']);
         break;
     case "add":
-        $page->output_nav_tabs($sub_tabs, 'create');
+        $page->output_nav_tabs($sub_tabs, "create");
         socialgroups_category_add();
         break;
     case "delete":
         $sub_tabs['delete'] = array(
-            'title'         => 'Delete Category',
-            'link'          => $baseurl . '&action=delete&cid='.$mybb->input['cid'],
-            'description'   => 'Delete a Social Groups Category'
+            "title" => "Delete",
+            "link" => $baseurl . "&action=delete&cid=" . $mybb->get_input("cid"),
+            "description" => "Delete category."
         );
-
-        $page->output_nav_tabs($sub_tabs, 'delete');
+        $page->output_nav_tabs($sub_tabs, "delete");
         socialgroups_category_delete($mybb->input['cid']);
         break;
     case "merge":
         $sub_tabs['merge'] = array(
-            'title'         => 'Merge Categories',
-            'link'          => $baseurl . '&action=merge&cid='.$mybb->input['cid'],
-            'description'   => 'Merge Social Groups Categories'
+            "title" => "Merge",
+            "link" => $baseurl . "&action=merge&cid=" . $mybb->get_input("cid"),
+            "description" => "Merge category."
         );
-
-        $page->output_nav_tabs($sub_tabs, 'merge');
+        $page->output_nav_tabs($sub_tabs, "merge");
         socialgroups_category_merge($mybb->input['cid']);
         break;
     default:
         $plugins->run_hooks("admin_socialgroups_category_action");
-        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_category_browse();
         break;
 }
@@ -89,7 +82,7 @@ function socialgroups_category_browse()
     $table->construct_header("Staff Only");
     $table->construct_header("Manage", array("colspan"=> 2));
     $table->construct_row();
-    $query = $db->write_query('SELECT * FROM ' . TABLE_PREFIX . 'socialgroup_categories ORDER BY disporder ASC, name ASC');
+    $query = $db->simple_select("socialgroup_categories", "*", "", array("order_by" => "name", "order_dir" => "ASC"));
     while($category = $db->fetch_array($query))
     {
         $table->construct_cell(htmlspecialchars_uni($category['name']));
@@ -115,7 +108,7 @@ function socialgroups_category_browse()
 
 function socialgroups_category_edit($cid)
 {
-    global $mybb, $lang, $db, $baseurl, $plugins;
+    global $mybb, $lang, $db, $baseurl, $plugins, $socialgroups;
     $cid = (int) $cid;
     if($mybb->request_method == "post") // ACP automatically calls the post check
     {
@@ -126,6 +119,7 @@ function socialgroups_category_edit($cid)
         );
         $plugins->run_hooks("admin_socialgroups_category_do_edit");
         $db->update_query("socialgroup_categories", $updated_category, "cid=$cid");
+        $socialgroups->update_socialgroups_category_cache();
         log_admin_action(array("action" => "category_edit", "cid" => $cid, "name" => $updated_category['name']));
         flash_message("Category " . $updated_category['name'] . "has been updated.", "success");
         admin_redirect($baseurl);
@@ -171,6 +165,7 @@ function socialgroups_category_delete($cid)
                 $socialgroups->delete_group($group['gid']);
             }
             $db->delete_query("socialgroup_categories", "cid=" . $cid);
+            $socialgroups->update_socialgroups_category_cache();
             flash_message("The category " . stripcslashes($category['name']) . " has been deleted.", "success");
             admin_redirect($baseurl);
         }
@@ -178,13 +173,20 @@ function socialgroups_category_delete($cid)
         {
             admin_redirect($baseurl);
         }
+        else
+        {
+            $form = new Form($baseurl . "&action=delete&cid=$cid", "post");
+            $form_container = new FormContainer("Confirm Deletion");
+            $form_container->output_row("Are you sure", "This cannot be undone.", $form->generate_select_box("confirm", array("1" => "Yes", "0" => "No"), 0), "confirm");
+            $form_container->end();
+            $form->output_submit_wrapper(array($form->generate_submit_button("Delete Category")));
+            $form->end();
+        }
     }
     else
     {
         $form = new Form($baseurl . "&action=delete&cid=$cid", "post");
-        $form_container = new FormContainer("Delete Category '{$category['name']}'");
-        echo $form->generate_hidden_field('confirm', '1');
-        $form_container->output_row('Confirm Deleting Category', 'Are you sure you want to delete <b>' . $category['name'] . '</b>? This action cannot be undone!', null);
+        $form_container = new FormContainer("Delete Category");
         $form_container->end();
         $form->output_submit_wrapper(array($form->generate_submit_button("Delete Category")));
         $form->end();
@@ -203,6 +205,7 @@ function socialgroups_category_add()
         );
         $plugins->run_hooks("admin_socialgroups_category_do_add");
         $cid = $db->insert_query("socialgroup_categories", $new_category);
+        $socialgroups->update_socialgroups_category_cache();
         log_admin_action(array("action" => "category_add", "cid" => $cid, "name" => $new_category['name']));
         flash_message("Category " . $new_category['name'] . "has been created.", "success");
         admin_redirect($baseurl);
@@ -223,7 +226,7 @@ function socialgroups_category_add()
 
 function socialgroups_category_merge($oldcid)
 {
-    global $mybb, $db, $plugins, $baseurl;
+    global $mybb, $db, $plugins, $baseurl, $socialgroups;
     $oldcid = (int) $oldcid;
     $query = $db->simple_select("socialgroup_categories", "*", "cid=$oldcid");
     $category = $db->fetch_array($query);
@@ -248,6 +251,7 @@ function socialgroups_category_merge($oldcid)
         $groupcount = $db->fetch_field($countquery, "total");
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_categories SET groups=$groupcount, name='$newname' WHERE cid=$newcid");
         $db->delete_query("socialgroup_categories", "cid=$oldcid");
+        $socialgroups->update_socialgroups_category_cache();
         flash_message("The categories have been merged.", "success");
         admin_redirect($baseurl);
     }
