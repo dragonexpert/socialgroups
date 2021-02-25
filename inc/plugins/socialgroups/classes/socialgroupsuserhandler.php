@@ -545,16 +545,16 @@ class socialgroupsuserhandler
         $cutoff = time() - 60 * $mybb->settings['wolcutoffmins'];
 
         // Account for invisible users.
-        $invisible = 1;
+        $invisible = 0;
         if($mybb->usergroup['canviewwolinvis'])
         {
-            $invisible = 0;
+            $invisible = 1;
         }
 
         $query = $db->query("SELECT u.username, u.usergroup, u.displaygroup, u.invisible, s.uid FROM " . TABLE_PREFIX . "users u
         LEFT JOIN " . TABLE_PREFIX . "sessions s ON(u.uid=s.uid)
         WHERE s.location LIKE '%showgroup.php?gid=" . $gid
-        . "%' AND s.time >= " . $cutoff . " AND u.invisible >= " . $invisible);
+        . "%' AND s.time >= " . $cutoff . " AND u.invisible <= " . $invisible);
         $comma = "";
         while($user = $db->fetch_array($query))
         {
