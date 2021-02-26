@@ -16,6 +16,7 @@ should be named socialgroups_(Hook_Name) because this way it will not intefere w
 - Please put comments in the code where things can get complicated.  You don't need to write a novel, but at least something will make it easier to understand.
 - I prefer braces on their own line for control statements and functions / methods.  
 - Every control statement has an opening and closing brace even if it is just one line of code that goes there.
+- Please use $mybb->get_input over $mybb->input because if the offset is not specified, it can lead to warnings and errors depending on the PHP version. For strings you don't need to specify a second parameter.  For integers the second parameter should be MyBB::INPUT_INT.  Other valid types are MyBB::INPUT_FLOAT, MyBB::INPUT_BOOL, and MyBB::INPUT_ARRAY.  As you work on files, please try and fix these gradually.
 
 **Bugs**
 - It is expected that there will be bugs early on.  Make sure to create an issue for them. Even better if you can do a Pull Request that resolves it.
