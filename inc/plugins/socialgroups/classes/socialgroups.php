@@ -656,7 +656,7 @@ class socialgroups
      */
     public function render_groups(): string
     {
-        global $mybb, $templates, $lang;
+        global $mybb, $templates, $lang, $theme;
         if(count($this->group_list) < 1) // Provide a fallback to those who do it wrong.
         {
             $this->list_groups();
