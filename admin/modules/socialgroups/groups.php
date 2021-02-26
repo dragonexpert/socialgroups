@@ -8,10 +8,10 @@ if(!defined("IN_MYBB"))
 {
     die("Direct access not allowed.");
 }
-$mybb->input['action'] = $mybb->get_input("action");
-if(!$mybb->input['action'])
+$action = "browse";
+if($mybb->get_input("action"))
 {
-    $mybb->input['action'] = "browse";
+    $action = $mybb->get_input("action");
 }
 
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
@@ -34,14 +34,14 @@ $sub_tabs['create'] = array(
 
 $table = new TABLE;
 
-switch($mybb->input['action'])
+switch($action)
 {
     case "browse":
         $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_group_browse();
         break;
     case "edit":
-        $gid = (int)$mybb->input['gid'];
+        $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
         $sub_tabs['edit'] = array(
             'title'         => 'Edit Group',
             'link'          => $baseurl . '&action=edit&gid='.$gid,
@@ -56,7 +56,7 @@ switch($mybb->input['action'])
         socialgroups_group_add();
         break;
     case "delete":
-        $gid = (int)$mybb->input['gid'];
+        $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
         $sub_tabs['delete'] = array(
             'title'         => 'Delete Group',
             'link'          => $baseurl . '&action=delete&gid='.$gid,
@@ -75,19 +75,26 @@ switch($mybb->input['action'])
 
 function socialgroups_group_browse()
 {
-    global $mybb, $db, $baseurl, $table, $socialgroups;
-    $cid = 0;
-    if($mybb->input['cid'])
+    global $mybb, $db, $baseurl, $table, $socialgroups, $cache;
+    $cid = "0";
+    if($mybb->get_input("cid"))
     {
-        $cid = (int) $mybb->input['cid'];
+        $cid = $mybb->get_input("cid");
     }
     $currentpage = 1;
-    if($mybb->input['page'])
+    if($mybb->get_input("page"))
     {
-        $currentpage = (int) $mybb->input['page'];
+        $currentpage = $mybb->get_input("page", MyBB::INPUT_INT);
     }
-    $sortfield = $db->escape_string($mybb->get_input("sort"));
-    $keywords = $mybb->get_input("keywords"); // This is sanitized in the function
+    $sortfield = $keywords = "";
+    if($mybb->get_input("sort"))
+    {
+        $sortfield = $db->escape_string($mybb->get_input("sort"));
+    }
+    if($mybb->get_input("keywords"))
+    {
+        $keywords = $mybb->get_input("keywords"); // This is sanitized in the function
+    }
     $socialgroups->list_groups($cid, $sortfield, $keywords, 50, $currentpage);
 
     // Cache group leaders here so we avoid querying with every loop.
@@ -106,11 +113,7 @@ function socialgroups_group_browse()
     $currentcid = 0;
 
     // Load the categories
-    $query = $db->simple_select("socialgroup_categories", "*");
-    while($category = $db->fetch_array($query))
-    {
-        $categories[$category['cid']] = $category;
-    }
+    $categories = $cache->read("socialgroups_categories");
 
     foreach($socialgroups->group_list as $mainkey => $value)
     {
@@ -152,7 +155,7 @@ function socialgroups_group_edit($gid)
     $groupquery = $db->query("SELECT g.*, u.username FROM " . TABLE_PREFIX . "socialgroups g
         LEFT JOIN ".TABLE_PREFIX."users u ON(g.uid=u.uid) WHERE g.gid=$gid");
     $groupinfo = $db->fetch_array($groupquery);
-    if(!$groupinfo['gid'])
+    if(!isset($groupinfo['gid']))
     {
         flash_message("Invalid Group.", "error");
         admin_redirect($baseurl);
@@ -162,18 +165,18 @@ function socialgroups_group_edit($gid)
         $updated_group = array(
             "name" => $mybb->get_input('name'),
             "description" => $mybb->get_input('description'),
-            "cid" => (int) $mybb->input['cid'],
+            "cid" => $mybb->get_input("cid", MyBB::INPUT_INT),
             "approved" => 1,
-            "private" => (int) $mybb->input['private'],
-            "staffonly" => (int) $mybb->input['staffonly'],
-            "inviteonly" => (int) $mybb->input['inviteonly'],
+            "private" => $mybb->get_input("private", MyBB::INPUT_INT),
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT),
+            "inviteonly" => $mybb->get_input("inviteonly", MyBB::INPUT_INT),
         );
-        $leadername = $db->escape_string($mybb->input['leader']);
+        $leadername = $db->escape_string($mybb->get_input("leader"));
         // Verify if the username exists
         $query = $db->simple_select("users", "uid", "username='$leadername'");
         $leader = $db->fetch_array($query);
         $updated_group['uid'] = $leader['uid'];
-        if(!$leader['uid'])
+        if(!isset($leader['uid']))
         {
             $updated_group['uid'] = $mybb->user['uid'];
         }
@@ -195,6 +198,7 @@ function socialgroups_group_edit($gid)
         $form_container->output_row("Description", "",$form->generate_text_box("description", $groupinfo['description']));
         //Create the category list
         $query = $db->simple_select("socialgroup_categories", "cid,name");
+        $categories = array();
         while($category = $db->fetch_array($query))
         {
             $categories[$category['cid']] = $category['name'];
@@ -217,18 +221,18 @@ function socialgroups_group_add()
         $new_group = array(
             "name" => $mybb->get_input('name'),
             "description" => $mybb->get_input('description'),
-            "cid" => (int) $mybb->input['cid'],
+            "cid" => $mybb->get_input("cid", MyBB::INPUT_INT),
             "approved" => 1,
-            "private" => (int) $mybb->input['private'],
-            "staffonly" => (int) $mybb->input['staffonly'],
-            "inviteonly" => (int) $mybb->input['inviteonly'],
+            "private" => $mybb->get_input("private", MyBB::INPUT_INT),
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT),
+            "inviteonly" => $mybb->get_input("inviteonly", MyBB::INPUT_INT),
         );
-        $leadername = $db->escape_string($mybb->input['leader']);
+        $leadername = $db->escape_string($mybb->get_input("leader"));
         // Verify if the username exists
         $query = $db->simple_select("users", "uid", "username='$leadername'");
         $leader = $db->fetch_array($query);
         $new_group['uid'] = $leader['uid'];
-        if(!$leader['uid'])
+        if(!isset($leader['uid']))
         {
             $new_group['uid'] = $mybb->user['uid'];
         }
@@ -270,7 +274,7 @@ function socialgroups_group_delete($gid)
     $gid = (int) $gid;
     if($mybb->request_method=="post")
     {
-        if ($mybb->input['confirm'] == 1)
+        if ($mybb->get_input("confirm", MyBB::INPUT_INT) == 1)
         {
             // Delete the group
             $db->delete_query("socialgroups", "gid=$gid");
