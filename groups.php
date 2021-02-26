@@ -25,13 +25,14 @@ if(count($members['users']) >= 1)
     }
 }
 
+$comma = $moderators = "";
 foreach($members['usergroups'] as $usergroup => $value)
 {
     $formatted_usergroup = format_name($usergroups[$value]['title'], $value, $value);
     $moderators .= $comma . $formatted_usergroup;
     $comma = ", ";
 }
-unset($comma);
+$comma = "";
 
 $cutoff = TIME_NOW - 900; // 15 minutes
 // Lets show off the users browsing.
@@ -41,12 +42,14 @@ $query = $db->query("SELECT s.*, u.username, u.usergroup, u.displaygroup FROM
 		WHERE s.time >= $cutoff AND s.uid !=0 AND s.location LIKE '%groups.php%'
 		ORDER BY u.username ASC");
 
+$userbrowsing = "";
 while($user = $db->fetch_array($query))
 {
     $profilelink = build_profile_link(format_name(htmlspecialchars_uni($user['username']), $user['usergroup'], $user['displaygroup']), $user['uid']);
     $userbrowsing .= $comma . $profilelink;
     $comma = ", ";
 }
+$db->free_result($query);
 
 // Count guests now.
 $countquery = $db->simple_select("sessions", "COUNT(sid) as guestcount", "time >=$cutoff AND uid=0 AND location LIKE '%groups.php\?'");
@@ -86,24 +89,23 @@ else
     $sort = $sorturl = "";
 }
 
-if($mybb->input['keywords'])
+$keywords = $keywordsurl = "";
+if($mybb->get_input("keywords"))
 {
-    $keywords = $mybb->input['keywords'];
+    $keywords = $mybb->get_input("keywords");
     $keywordsurl = "&keywords=$keywords";
-}
-else
-{
-    $keywords = $keywordsurl = "";
 }
 
 $groups = $socialgroups->list_groups((string) $cidonly, $sort, $keywords);
 $grouphtml = $socialgroups->render_groups();
+$clearfilter = "";
 if($cidonly || $keywords)
 {
     eval("\$clearfilter =\"".$templates->get("socialgroups_clear")."\";");
 }
 $query = $db->simple_select("socialgroups", "COUNT(gid) as totalgroups", "uid=" . $mybb->user['uid']);
 $totalgroups = $db->fetch_field($query, "totalgroups");
+$creategroupbutton = "";
 if($mybb->usergroup['maxsocialgroups_create'] == 0 || $totalgroups < $mybb->usergroup['maxsocialgroups_create'])
 {
     eval("\$creategroupbutton =\"".$templates->get("socialgroups_create_group_button")."\";");
