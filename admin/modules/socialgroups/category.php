@@ -7,9 +7,10 @@ if(!defined("IN_MYBB"))
 {
     die("Direct access not allowed.");
 }
-if(!$mybb->input['action'])
+$action = "browse";
+if($mybb->get_input("action"))
 {
-    $mybb->input['action'] = "browse";
+    $action = $mybb->get_input("action");
 }
 
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
@@ -17,16 +18,16 @@ $socialgroups = new socialgroups();
 $page->output_header("Social Group Categories");
 $baseurl = "index.php?module=socialgroups-category";
 $sub_tabs['browse'] = array(
-        "title" => "Browse",
-        "link" => $baseurl,
-        "description" => "Browse categories."
-    );
+    "title" => "Browse",
+    "link" => $baseurl,
+    "description" => "Browse categories."
+);
 
 $sub_tabs['create'] = array(
-        "title" => "Create",
-        "link" => $baseurl . "&action=add",
-        "description" => "Create categories."
-    );
+    "title" => "Create",
+    "link" => $baseurl . "&action=add",
+    "description" => "Create categories."
+);
 
 $table = new TABLE;
 
@@ -103,19 +104,19 @@ function socialgroups_category_browse()
     {
         $table->construct_cell("There are no categories.", array("colspan" => 6));
     }
+    $db->free_result($query);
     $table->output("Categories");
 }
 
-function socialgroups_category_edit($cid)
+function socialgroups_category_edit(int $cid=0)
 {
     global $mybb, $lang, $db, $baseurl, $plugins, $socialgroups;
-    $cid = (int) $cid;
     if($mybb->request_method == "post") // ACP automatically calls the post check
     {
         $updated_category = array(
             "name" => $db->escape_string($mybb->get_input("name")),
-            "disporder" => (int) $mybb->input['disporder'],
-            "staffonly" => (int) $mybb->input['staffonly']
+            "disporder" => $mybb->get_input("disporder", MyBB::INPUT_INT),
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT)
         );
         $plugins->run_hooks("admin_socialgroups_category_do_edit");
         $db->update_query("socialgroup_categories", $updated_category, "cid=$cid");
@@ -128,7 +129,7 @@ function socialgroups_category_edit($cid)
     $form_container = new FormContainer("Edit Category");
     $categoryquery = $db->simple_select("socialgroup_categories", "*", "cid=$cid");
     $category = $db->fetch_array($categoryquery);
-    if(!$category['cid'])
+    if(!isset($category['cid']))
     {
         flash_message("Invalid Category.", "error");
         admin_redirect($baseurl);
@@ -142,10 +143,9 @@ function socialgroups_category_edit($cid)
     $form->end();
 }
 
-function socialgroups_category_delete($cid)
+function socialgroups_category_delete(int $cid=0)
 {
     global $mybb, $db, $plugins, $baseurl, $socialgroups;
-    $cid = (int) $cid;
     $query = $db->simple_select("socialgroup_categories", "*", "cid=$cid");
     if($db->num_rows($query) == 0)
     {
@@ -156,7 +156,7 @@ function socialgroups_category_delete($cid)
     $plugins->run_hooks("admin_socialgroups_category_delete_start");
     if($mybb->request_method == "post")
     {
-        if($mybb->input['confirm'] == 1)
+        if($mybb->get_input("confirm", MyBB::INPUT_INT) == 1)
         {
             // Delete all groups in the category
             $query = $db->simple_select("socialgroups", "gid", "cid=$cid");
@@ -169,7 +169,7 @@ function socialgroups_category_delete($cid)
             flash_message("The category " . stripcslashes($category['name']) . " has been deleted.", "success");
             admin_redirect($baseurl);
         }
-        else if(array_key_exists("confirm", $mybb->input) && $mybb->input['confirm'] == 0)
+        else if($mybb->get_input("confirm", MyBB::INPUT_INT) == 0)
         {
             admin_redirect($baseurl);
         }
@@ -200,8 +200,8 @@ function socialgroups_category_add()
     {
         $new_category = array(
             "name" => $db->escape_string($mybb->get_input("name")),
-            "disporder" => (int) $mybb->input['disporder'],
-            "staffonly" => (int) $mybb->input['staffonly']
+            "disporder" => $mybb->get_input("disporder", MyBB::INPUT_INT),
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPOUT_INT)
         );
         $plugins->run_hooks("admin_socialgroups_category_do_add");
         $cid = $db->insert_query("socialgroup_categories", $new_category);
@@ -224,20 +224,19 @@ function socialgroups_category_add()
     }
 }
 
-function socialgroups_category_merge($oldcid)
+function socialgroups_category_merge(int $oldcid=0)
 {
     global $mybb, $db, $plugins, $baseurl, $socialgroups;
-    $oldcid = (int) $oldcid;
     $query = $db->simple_select("socialgroup_categories", "*", "cid=$oldcid");
     $category = $db->fetch_array($query);
-    if(!$category['cid'])
+    if(!isset($category['cid']))
     {
         flash_message("Invalid Category.", "error");
         admin_redirect($baseurl);
     }
     if($mybb->request_method == "post")
     {
-        $newcid = (int) $mybb->input['newcid'];
+        $newcid = $mybb->get_input("newcid", MyBB::INPUT_INT);
         $plugins->run_hooks("admin_socialgroups_category_merge");
         $newname = $db->escape_string($mybb->get_input("name"));
         if(!$newname)
