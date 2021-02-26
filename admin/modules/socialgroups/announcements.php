@@ -7,9 +7,11 @@ if(!defined("IN_MYBB"))
 {
     die("Direct access not allowed.");
 }
-if(!$mybb->input['action'])
+
+$action = "browse";
+if($mybb->get_input("action"))
 {
-    $mybb->input['action'] = "browse";
+    $action = $mybb->get_input("action");
 }
 
 require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
@@ -33,7 +35,7 @@ $sub_tabs['create'] = array(
 
 $table = new TABLE;
 
-switch($mybb->input['action'])
+switch($action)
 {
     case "browse":
         $page->output_nav_tabs($sub_tabs, 'browse');
@@ -42,7 +44,7 @@ switch($mybb->input['action'])
     case "edit":
         $sub_tabs['edit'] = array(
             'title'         => 'Edit Announcement',
-            'link'          => $baseurl . '&action=edit&aid='.$mybb->input['aid'],
+            'link'          => $baseurl . '&action=edit&aid='.$mybb->get_input("aid", MyBB::INPUT_INT),
             'description'   => 'Edit an Announcement'
         );
 
@@ -56,12 +58,12 @@ switch($mybb->input['action'])
     case "delete":
         $sub_tabs['delete'] = array(
             'title'         => 'Delete Category',
-            'link'          => $baseurl . '&action=delete&aid='.$mybb->input['aid'],
+            'link'          => $baseurl . '&action=delete&aid='.$mybb->get_input("aid", MyBB::INPUT_INT),
             'description'   => 'Delete an Announcement'
         );
 
         $page->output_nav_tabs($sub_tabs, 'delete');
-        socialgroups_announcement_delete($mybb->input['aid']);
+        socialgroups_announcement_delete($mybb->get_input("aid", MyBB::INPUT_INT));
         break;
     default:
         $page->output_nav_tabs($sub_tabs, 'browse');
@@ -102,9 +104,9 @@ function socialgroups_announcement_add()
     global $mybb, $db, $baseurl;
     if ($mybb->request_method == "post") {
         $new_announcement = array(
-            "subject" => $db->escape_string($mybb->input['subject']),
-            "message" => $db->escape_string($mybb->input['message']),
-            "active" => $mybb->input['active'],
+            "subject" => $db->escape_string($mybb->get_input("subject")),
+            "message" => $db->escape_string($mybb->get_input("message")),
+            "active" => $mybb->get_input("active", MyBB::INPUT_INT),
             "gid" => 0,
             "uid" => $mybb->user['uid'],
             "dateline" => TIME_NOW
@@ -126,16 +128,15 @@ function socialgroups_announcement_add()
     }
 }
 
-function socialgroups_announcement_edit($aid)
+function socialgroups_announcement_edit(int $aid=0)
 {
     global $mybb, $db, $baseurl;
-    $aid = (int) $aid;
     if($mybb->request_method == "post")
     {
         $updated_announcement = array(
-            "subject" => $db->escape_string($mybb->input['subject']),
-            "message" => $db->escape_string($mybb->input['message']),
-            "active" => $mybb->input['active']
+            "subject" => $db->escape_string($mybb->get_input("subject")),
+            "message" => $db->escape_string($mybb->get_input("message")),
+            "active" => $mybb->get_input("active", MyBB::INPUT_INT)
         );
         $db->update_query("socialgroup_announcements", $updated_announcement, "aid=$aid");
         flash_message("The announcement has been updated.", "success");
@@ -156,10 +157,9 @@ function socialgroups_announcement_edit($aid)
     }
 }
 
-function socialgroups_announcement_delete($aid)
+function socialgroups_announcement_delete(int $aid=0)
 {
     global $mybb, $db, $baseurl;
-    $aid = (int) $aid;
     if($mybb->request_method == "post")
     {
         if($mybb->input['confirm'] == 1)
