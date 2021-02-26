@@ -143,7 +143,8 @@ class socialgroups
         }
     }
 
-    /** A generic error function that prepends socialgroups_ to the string for language purposes.
+    /**
+     * A generic error function that prepends socialgroups_ to the string for language purposes.
      * @param string $string The string to pass to the error handler.
      */
 
@@ -372,16 +373,21 @@ class socialgroups
         $query = $db->simple_select("socialgroups", "*", "gid=$gid");
         $group = $db->fetch_array($query);
         $db->free_result($query);
-        $group['name'] = htmlspecialchars_uni($group['name']);
-        $group['description'] = htmlspecialchars_uni($group['description']);
-        $group['logo'] = htmlspecialchars_uni($group['logo']);
-        // Add a hook so other devs can use it to load conveniently
-        $plugins->run_hooks("class_socialgroups_load_group", $group);
-        $this->group[$gid] = $group;
-        return $this->group[$gid];
+        if(is_array($group))
+        {
+            $group['name'] = htmlspecialchars_uni($group['name']);
+            $group['description'] = htmlspecialchars_uni($group['description']);
+            $group['logo'] = htmlspecialchars_uni($group['logo']);
+            // Add a hook so other devs can use it to load conveniently
+            $plugins->run_hooks("class_socialgroups_load_group", $group);
+            $this->group[$gid] = $group;
+            return $this->group[$gid];
+        }
+        $this->error("invalid_group");
     }
 
-    /** This function loads a category.  Typically called after loading a group.
+    /**
+     * This function loads a category.  Typically called after loading a group.
      * @param int $cid The id of the category.
      * @param bool $use_cache Whether to load from cache.
      * @return array An array of category information.
@@ -404,7 +410,7 @@ class socialgroups
             $this->category = $categories;
             if(is_array($categories))
             {
-                if(array_key_exists($cid, $categories))
+                if(isset($categories[$cid]))
                 {
                     return $categories[$cid];
                 }
@@ -417,7 +423,7 @@ class socialgroups
             {
                 $this->update_socialgroups_category_cache();
                 $categories = $cache->read("socialgroups_categories");
-                if(!array_key_exists($cid, $categories))
+                if(!isset($categories[$cid]))
                 {
                     $this->error("invalid_category");
                 }
@@ -441,7 +447,8 @@ class socialgroups
         }
     }
 
-    /** This function loads some permissions about a group.  This should be called after fetching a group.
+    /**
+     * This function loads some permissions about a group.  This should be called after fetching a group.
      * @param int $gid The id of the group.
      * @return array An array of permissions.
      */
@@ -449,7 +456,7 @@ class socialgroups
     public function load_permissions(int $gid=1): array
     {
         global $db;
-        if(array_key_exists($gid, $this->permissions))
+        if(isset($this->permissions[$gid]))
         {
             return $this->permissions[$gid];
         }
@@ -485,11 +492,12 @@ class socialgroups
         {
             $limit = 1;
         }
+        $hidden = "";
         if($showhidden)
         {
             $hidden = " OR active=0 ";
         }
-        if(array_key_exists($gid, $this->announcements))
+        if(isset($this->announcements[$gid]))
         {
             return $this->announcements[$gid];
         }
@@ -501,18 +509,18 @@ class socialgroups
             $query = $db->query("SELECT a.*, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions
             FROM " . TABLE_PREFIX . "socialgroup_announcements a
             LEFT JOIN " . TABLE_PREFIX . "users u ON(a.uid=u.uid)
-            WHERE active=1 $hidden
+            WHERE active=1 " . $hidden . "
             ORDER BY a.gid ASC, a.dateline DESC
-            LIMIT $limit");
+            LIMIT " . $limit);
         }
         else
         {
             $query = $db->query("SELECT a.*, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatartype, u.avatardimensions
             FROM " . TABLE_PREFIX . "socialgroup_announcements a
             LEFT JOIN " . TABLE_PREFIX . "users u ON(a.uid=u.uid)
-            WHERE active=1 AND gid IN(0,$gid)
+            WHERE active=1 AND gid IN(0," . $gid . ")
             ORDER BY a.gid ASC, a.dateline DESC
-            LIMIT $limit");
+            LIMIT " . $limit);
         }
         while($announcement = $db->fetch_array($query))
         {
@@ -528,7 +536,8 @@ class socialgroups
 
 
 
-    /** This functions returns an array of social groups.
+    /**
+     * This functions returns an array of social groups.
      * @Param string $cid: When not 0, it returns only groups in that category.
      * @Param string $sortfield: What to sort the groups by.
      * @Param string $keywords: The keywords to look for in a group.
@@ -540,6 +549,7 @@ class socialgroups
     public function list_groups(string $cid="", string $sortfield="", string $keywords="", int $perpage=50, int $currentpage=0): array
     {
         global $db, $mybb, $lang;
+        $cidonly = "";
         if($cid)
         {
             $cid = $db->escape_string($cid);
@@ -563,6 +573,7 @@ class socialgroups
                 $ordersql = "s.gid ASC";
                 break;
         }
+        $cleankeywords = $searchsql = "";
         if($keywords)
         {
             // Check if group names are full text.  If so, use full text syntax.
@@ -577,17 +588,15 @@ class socialgroups
             }
         }
         $categories = implode(",", array_keys($this->get_viewable_categories()));
-        $perpage = (int) $perpage;
         if($perpage <= 0) // Use this to avoid SQL errors.
         {
             $perpage = 1;
         }
-        $currentpage = (int) $currentpage;
         if(!$currentpage)
         {
-            if($mybb->input['page'])
+            if($mybb->get_input("page"))
             {
-                $currentpage = (int) $mybb->input['page'];
+                $currentpage = $mybb->get_input("page");
             }
             else
             {
@@ -608,9 +617,9 @@ class socialgroups
             FROM " . TABLE_PREFIX . "socialgroups s
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_categories c ON(s.cid=c.cid)
             LEFT JOIN " . TABLE_PREFIX . "users u ON(s.uid=u.uid)
-            WHERE s.cid IN(" . $categories . ") $cidonly $searchsql
+            WHERE s.cid IN(" . $categories . ") " . $cidonly . $searchsql . "
             ORDER BY c.disporder ASC , $ordersql
-            LIMIT $start , $perpage");
+            LIMIT " . $start . "," . $perpage);
         $numgroups = $db->num_rows($query);
         if($keywords && $numgroups == 1)
         {
@@ -641,7 +650,8 @@ class socialgroups
         return $this->group_list;
     }
 
-    /** This function renders the list of groups.  This should be called after list_groups.
+    /**
+     * This function renders the list of groups.  This should be called after list_groups.
      * @return String The HTML content of groups.
      */
     public function render_groups(): string
@@ -659,7 +669,7 @@ class socialgroups
             {
                 foreach ($this->group_list[$mainkey] as $subkey)
                 {
-                    if ($subkey['cid'] != $currentcid)
+                    if($subkey['cid'] != $currentcid)
                     {
                         $subkey['category_link'] = $this->categorylink($subkey['cid'], $subkey['category']);
                         eval("\$html .=\"" . $templates->get("socialgroups_category") . "\";");
@@ -683,7 +693,8 @@ class socialgroups
     }
 
 
-    /** This gives an array of viewable categories.
+    /**
+     * This gives an array of viewable categories.
      * The keys will be the cid while the value is the name.
      * @return Array An array of viewable categories.
      */
