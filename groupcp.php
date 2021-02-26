@@ -20,9 +20,9 @@ if(!$groups)
 }
 add_breadcrumb($lang->socialgroups, "groups.php");
 add_breadcrumb("Group CP", "groupcp.php");
-if($mybb->input['gid'])
+if($mybb->get_input("gid"))
 {
-    $gid = (int) $mybb->input['gid'];
+    $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
     $groupinfo = $socialgroups->load_group($gid);
 
     // Validate if the person is in fact a group leader for the specific group
@@ -35,14 +35,14 @@ if($mybb->input['gid'])
         }
     }
 
-    if($mybb->input['action'] == "approve_join_request" && $mybb->input['rid'])
+    if($mybb->get_input("action") == "approve_join_request" && $mybb->get_input("rid"))
     {
-        $rid = (int) $mybb->input['rid'];
+        $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_joinrequests 
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
         WHERE r.rid=" . $rid . " AND r.gid=" . $gid);
         $request = $db->fetch_array($query);
-        if(!$request['rid'])
+        if(!isset($request['rid']))
         {
             error($lang->socialgroups_invalid_request);
         }
@@ -73,12 +73,12 @@ if($mybb->input['gid'])
         send_pm($pm, $uid, true);
         redirect($url, $message);
     }
-    if($mybb->input['action'] == "delete_request" && $mybb->input['rid'])
+    if($mybb->get_input("action") == "delete_request" && $mybb->get_input("rid"))
     {
-        $rid = (int) $mybb->input['rid'];
+        $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->simple_select("socialgroup_join_requests", "*", "rid=$rid AND gid=" . $groupinfo['gid']);
         $request = $db->fetch_array($query);
-        if(!$request['rid'])
+        if(!isset($request['rid']))
         {
             error($lang->socialgroups_invalid_request);
         }
@@ -87,14 +87,14 @@ if($mybb->input['gid'])
         $message = $lang->socialgroups_join_request_rejected;
         redirect($url, $message);
     }
-    if($mybb->input['action'] == "deny_request" && $mybb->input['rid'])
+    if($mybb->get_input("action") == "deny_request" && $mybb->get_input("rid"))
     {
-        $rid = (int)$mybb->input['rid'];
+        $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_joinrequests 
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
         WHERE r.rid=" . $rid . " AND r.gid=" . $gid);
         $request = $db->fetch_array($query);
-        if (!$request['rid'])
+        if (!isset($request['rid']))
         {
             error($lang->socialgroups_invalid_request);
         }
@@ -123,8 +123,9 @@ if($mybb->input['gid'])
         send_pm($pm, $uid, true);
         redirect($url, $message);
     }
-    if($mybb->input['action'] == "join_requests")
+    if($mybb->get_input("action") == "join_requests")
     {
+        add_breadcrumb("Join Requests", "groupcp.php?action=join_requests");
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_join_requests r
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
         WHERE r.gid=$gid
@@ -145,7 +146,7 @@ if($mybb->input['gid'])
         output_page($join_request_page);
         exit;
     }
-    if($mybb->input['action'] == "lockgroup" && $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+    if($mybb->get_input("action") == "lockgroup" && $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
     {
         $update_group = array(
             "locked" => 1
@@ -171,7 +172,7 @@ if($mybb->input['gid'])
 
         redirect($url, $message);
     }
-    if($mybb->input['action'] == "unlockgroup" && $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+    if($mybb->get_input("action") == "unlockgroup" && $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
     {
         $update_group = array(
             "locked" => 0
@@ -198,9 +199,9 @@ if($mybb->input['gid'])
         redirect($url, $message);
     }
 
-    if($mybb->input['action'] == "add_leader")
+    if($mybb->get_input("action") == "add_leader")
     {
-        if($mybb->request_method == "POST" && verify_post_check($mybb->input['my_post_key']))
+        if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
         {
             // This function handles validation.
             $success = $socialgroups->socialgroupsuserhandler->add_leader($gid, $mybb->get_input("leader", MyBB::INPUT_INT));
@@ -232,9 +233,9 @@ if($mybb->input['gid'])
             exit;
         }
     }
-    if($mybb->input['action'] == "remove_leader")
+    if($mybb->get_input("action") == "remove_leader")
     {
-        if($mybb->request_method == "POST" && verify_post_check($mybb->input['my_post_key']))
+        if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
         {
             $success = $socialgroups->socialgroupsuserhandler->remove_leader($gid, $mybb->input['leader']);
             $message = "Removed leader successfully.";
@@ -298,7 +299,7 @@ while($group = $db->fetch_array($groupquery))
     eval("\$grouplist .=\"".$templates->get("socialgroups_groupcp_group")."\";");
 }
 $db->free_result($groupquery);
-if($socialgroups->socialgroupsuserhandler->is_moderator($groupinfo['gid'], $mybb->user['uid']))
+if($socialgroups->socialgroupsuserhandler->is_moderator(1, $mybb->user['uid']))
 {
     eval("\$groupcpmod =\"" . $templates->get("socialgroups_groupcp_modcolumn") . "\";");
 }
