@@ -1,0 +1,27 @@
+<html>
+        <head>
+        <title>Social Groups</title>
+        {$headerinclude}
+        </head>
+        <body>
+        {$header}
+        Moderated By: {$moderators}
+        <br />
+        Users Browsing: {$userbrowsing}
+        <br />
+        Max Groups: {$mybb->usergroup['maxsocialgroups_create']}
+        <br />
+        <form action="{$mybb->settings['bburl']}/groups.php" method="get">
+        <input type="text" name="keywords" value="{$keywords}" id="searchgroups" class="textbox" />
+        <input type="submit" value="Search Groups" class="button" />
+        </form>
+        <br />
+        {$grouphtml}
+        <br />
+        {$creategroupbutton}
+        <br />
+        {$clearfilter}
+        <br />
+        {$footer}
+        </body>
+        </html>
