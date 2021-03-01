@@ -22,10 +22,13 @@ class socialgroupsreports
         $this->load_reported_posts(1);
     }
 
-    public function load_reported_posts($read=0)
+    /**
+     * Loads the reported posts.
+     * @param int $read Whether to include read reports.
+     */
+    public function load_reported_posts(int $read=0)
     {
         global $db;
-        $read = (int) $read;
         if($read)
         {
             $query = $db->simple_select("socialgroup_reported_posts", "*");
@@ -40,29 +43,33 @@ class socialgroupsreports
         }
     }
 
-    public function can_report($uid=0, $pid=0)
+    /**
+     * This function checks if a user can report a post.
+     * @param int $uid The id of the user.
+     * @param int $pid The id of the post.
+     * @return bool|mixed false or true.
+     */
+    public function can_report(int $uid=0, int $pid=0)
     {
         global $mybb, $db, $socialgroups, $plugins;
-        $pid = (int) $pid;
         if(!$pid)
         {
             $socialgroups->error("invalid_post");
         }
-        $uid = (int) $uid;
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
         }
         if($uid == 0) // Don't allow guests to report
         {
-            return FALSE;
+            return false;
         }
         // Now check if the post has been reported before.  If so, rely on the setting.
-        if(array_key_exists($pid, $this->reportedposts) && $mybb->settings['socialgroups_multiple_report'] == 0)
+        if(isset($this->reportedposts[$pid]) && $mybb->settings['socialgroups_multiple_report'] == 0)
         {
-            return FALSE;
+            return false;
         }
-        if(array_key_exists($uid, $this->canreport))
+        if(isset($this->canreport[$uid]))
         {
             return $this->canreport[$uid];
         }
@@ -74,12 +81,12 @@ class socialgroupsreports
         }
         // Now we have the usergroups, get the permissions.
         $usergroupquery = $db->simple_select("usergroups", "*", "gid IN(" . $usergroupinfo['usergroup'] . $usergroupinfo['additionalgroups'] . ")");
-        $canreport = TRUE;
+        $canreport = true;
         while($usergroup = $db->fetch_array($usergroupquery))
         {
             if($usergroup['isbannedgroup'])
             {
-                $canreport = FALSE;
+                $canreport = false;
             }
         }
         $this->canreport[$uid] = $canreport;
@@ -87,14 +94,19 @@ class socialgroupsreports
         return $this->canreport[$uid];
     }
 
-    public function report_post($data)
+    /**
+     * This function handles reporting the post.
+     * @param array $data An array of data about the post.
+     * @return mixed The id of the report if succesful.
+     */
+    public function report_post(array $data)
     {
         global $mybb, $db, $socialgroups, $plugins;
-        if(!$data['pid'])
+        if(!isset($data['pid']))
         {
             $socialgroups->error("invalid_post");
         }
-        if(!$data['reason'])
+        if(!isset($data['reason']))
         {
             $socialgroups->error("missing_reason");
         }
@@ -112,6 +124,7 @@ class socialgroupsreports
         {
             $tid = $data['tid'];
         }
+
         $reportinfo = array(
             "pid" =>(int) $data['pid'],
             "tid" => $tid,
@@ -120,20 +133,23 @@ class socialgroupsreports
             "status" => 0,
             "reason" => $db->escape_string($data['reason'])
         );
-        $plugins->run_hooks("class_socialgroups_reports_report", $reportinfo);
+        $plugins->run_hooks("class_socialgroups_reports_report_post", $reportinfo);
         $rid = $db->insert_query("socialgroup_reported_posts", $reportinfo);
         return $rid;
     }
 
-    public function handle_report($rid, $uid=0)
+    /**
+     * This function handles a report update.
+     * @param int $rid The id of the report.
+     * @param int $uid The id of the user.
+     */
+    public function handle_report(int $rid, int $uid=0)
     {
-        global $db, $mybb, $socialgroups;
-        $rid = (int) $rid;
+        global $db, $mybb, $socialgroups, $plugins;
         if(!$rid)
         {
             $socialgroups->error("invalid_report.");
         }
-        $uid = (int) $uid;
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
@@ -147,9 +163,13 @@ class socialgroupsreports
             "handledby" => $uid,
             "handledate" => TIME_NOW
         );
+        $plugins->run_hooks("class_socialgroups_reports_handle_report", $updated_report);
         $db->update_query("socialgroup_reported_posts", $updated_report, "rid=$rid");
     }
 
+    /**
+     * This function prunes reports from socialgroups.
+     */
     public function prune_reports()
     {
         global $mybb, $db;
