@@ -6,7 +6,7 @@
  */
 if(!defined("IN_MYBB"))
 {
-    die("Direct access not allowed.");
+    die("Direct access not allowed to the data handler.");
 }
 
 class socialgroupsdatahandler
@@ -16,12 +16,15 @@ class socialgroupsdatahandler
     {
         // Nothing yet
     }
-    /* A function to update a group.
-   * $data: Array of update data
-   * $method: insert or update
-   * $where: The where clause. */
 
-    public function save_group($data, $method="update", $where="")
+    /**
+     * A function to update a group.
+     * @param array $data An array of data about the group.
+     * @param string $method Either insert or update.
+     * @param string $where The where clause.  Used for update.
+     */
+
+    public function save_group(array $data, string $method="update", string $where="")
     {
         global $mybb, $db, $plugins, $lang, $socialgroups, $socialgroupsuserhandler;
         if($method != "insert" && $method != "update")
@@ -96,5 +99,6 @@ class socialgroupsdatahandler
             $socialgroups->socialgroupsuserhandler->join($gid, $data['uid'], 1);
             $socialgroups->socialgroupsuserhandler->add_leader($gid, $data['uid']);
         }
+        $socialgroups->update_cache();
     }
 }
