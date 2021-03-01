@@ -2,7 +2,7 @@ Group CP
 - Add / Remove Leaders ( Group Owner Only ) * Complete *
 - Edit Group Link ( Group Leaders / Moderators ) * Complete *
 - Manage Join Requests ( Group Leaders ) * Complete *
-- Add / Remove Members
+- Add / Remove Members * Complete *
 - Lock Group ( Moderators Only ) * Complete *
 
 Groups
@@ -10,7 +10,7 @@ Groups
 - Filter by category * Complete *
 - Search for group name * Complete *
 - Sort by name, threads, post, and creator * Complete *
-- List users browsing
+- List users browsing * Complete *
 
 Showgroup
 - List users browsing group * Complete *
@@ -26,7 +26,7 @@ Showgroup
 - Implement Private Group * Complete *
 - Implement Locked Group * Complete *
 - Implement Staff Only Group ( Moderators+ ) * Complete *
-- Implement Join Types: ( Instant, Approval Required )
+- Implement Join Types: ( Instant, Approval Required ) * Complete *
 - Inline Thread Moderation * Complete *
 
 Admin Modules
