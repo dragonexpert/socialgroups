@@ -8,6 +8,7 @@ $templatelist = "socialgroups_group_cp,socialgroups_join_request_request,socialg
 $templatelist .= ",socialgroups_groupcp_page,socialgroups_add_leader_page,socialgroups_add_remove_leaders,socialgroups_groupcp_group";
 $templatelist .= ",socialgroups_remove_leader_page,socialgroups_unlock_group,socialgroups_lock_group,socialgroups_groupcp_modcolumn";
 $templatelist .= ",socialgroups_join_request_page,socialgroups_join_request_no_requests,socialgroups_join_request_request";
+$templatelist .= ",socialgroups_add_member_form,socialgroups_remove_member_form";
 define("THIS_SCRIPT", "groupcp.php");
 require_once "global.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -32,6 +33,87 @@ if($mybb->get_input("gid"))
         if(!$socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
         {
             error_no_permission();
+        }
+    }
+
+    if($mybb->get_input("action") == "add_member")
+    {
+        if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
+        {
+            if($mybb->get_input("userid") != 0)
+            {
+                $userid = $mybb->get_input("userid", MyBB::INPUT_INT);
+            }
+            else if($mybb->get_input("member_username"))
+            {
+                $query = $db->simple_select("users", "uid, username", "username='" . $db->escape_string($mybb->get_input("member_username")) . "'");
+                $member = $db->fetch_array($query);
+                if(!isset($member['uid']))
+                {
+                    $socialgroups->error("invalid_member");
+                }
+                $userid = $member['uid'];
+            }
+            else
+            {
+                $socialgroups->error("invalid_member");
+            }
+
+            if(!$socialgroups->socialgroupsuserhandler->is_member($gid, $userid))
+            {
+                $socialgroups->socialgroupsuserhandler->join($gid, $userid, 1);
+                $url = $mybb->settings['bburl'] . "/groupcp.php";
+                $message = "The member has been added to the group.";
+                redirect($url, $message);
+                exit;
+            }
+            else
+            {
+                $socialgroups->error("already_member");
+            }
+        }
+        else
+        {
+            eval("\$add_member_form = \"".$templates->get("socialgroups_add_member_form")."\";");
+            output_page($add_member_form);
+            exit;
+        }
+    }
+
+    if($mybb->get_input("action") == "remove_member")
+    {
+        if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
+        {
+            if($mybb->get_input("userid") != 0)
+            {
+                $userid = $mybb->get_input("userid", MyBB::INPUT_INT);
+            }
+            else if($mybb->get_input("member_username"))
+            {
+                $query = $db->simple_select("users", "uid, username", "username='" . $db->escape_string($mybb->get_input("member_username")) . "'");
+                $member = $db->fetch_array($query);
+                if(!isset($member['uid']))
+                {
+                    $socialgroups->error("invalid_member");
+                }
+                $userid = $member['uid'];
+            }
+            else
+            {
+                $socialgroups->error("invalid_member");
+            }
+            // The remove_member function validates if the member is in the group.
+            $socialgroups->socialgroupsuserhandler->remove_member($gid, $userid);
+            $url = $mybb->settings['bburl'] . "/groupcp.php";
+            $message = "The member has been removed from the group.";
+            redirect($url, $message);
+            exit;
+        }
+        else
+        {
+            eval("\$remove_member_form = \"".$templates->get("socialgroups_remove_member_form")."\";");
+            output_page($remove_member_form);
+            exit;
         }
     }
 
