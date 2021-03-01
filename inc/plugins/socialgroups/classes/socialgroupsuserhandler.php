@@ -182,8 +182,8 @@ class socialgroupsuserhandler
 
     /**
      * This function loads the moderators for social groups.  Typically called after fetching a group.
-    * @param int $gid The id of the group.
-    * @return Array Associative array with the keys users and usergroups, both of which are arrays.
+     * @param int $gid The id of the group.
+     * @return Array Associative array with the keys users and usergroups, both of which are arrays.
      */
 
     public function load_moderators(int $gid=1) : array
@@ -242,12 +242,20 @@ class socialgroupsuserhandler
 
     public function can_join(int $gid=1, int $uid=0): bool
     {
-        global $mybb;
+        global $mybb, $socialgroups;
         if(!$gid)
         {
             return false;
         }
-        $cid = $this->group[$gid]['cid'];
+        if(isset($socialgroups->group[$gid]))
+        {
+            $cid = $socialgroups->group[$gid]['cid'];
+        }
+        else
+        {
+            $socialgroups->load_group($gid);
+            $cid = $socialgroups->group[$gid]['cid'];
+        }
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
@@ -260,19 +268,19 @@ class socialgroupsuserhandler
         {
             return false;
         }
-        if($this->group[$gid]['staffonly'] && !$this->is_moderator($gid, $uid))
+        if($socialgroups->group[$gid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
             return false;
         }
-        if($this->category[$cid]['staffonly'] && !$this->is_moderator($gid, $uid))
+        if($socialgroups->category[$cid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
             return false;
         }
-        if($this->group[$gid]['inviteonly'] && !$this->has_invite($gid, $uid))
+        if($socialgroups->group[$gid]['inviteonly'] && !$this->has_invite($gid, $uid))
         {
             return false;
         }
-        if($this->group[$gid]['jointype'] == 1 && $this->has_join_request($gid, $uid))
+        if($socialgroups->group[$gid]['jointype'] == 1 && $this->has_join_request($gid, $uid))
         {
             return false;
         }
@@ -554,8 +562,8 @@ class socialgroupsuserhandler
         $query = $db->query("SELECT u.username, u.usergroup, u.displaygroup, u.invisible, s.uid FROM " . TABLE_PREFIX . "users u
         LEFT JOIN " . TABLE_PREFIX . "sessions s ON(u.uid=s.uid)
         WHERE s.location LIKE '%showgroup.php?gid=" . $gid
-        . "%' AND s.time >= " . $cutoff . " AND u.invisible <= " . $invisible);
-        $comma = "";
+            . "%' AND s.time >= " . $cutoff . " AND u.invisible <= " . $invisible);
+        $comma = $online_members = "";
         while($user = $db->fetch_array($query))
         {
             $invisiblemark = "";

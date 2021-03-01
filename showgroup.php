@@ -37,7 +37,12 @@ if($groupinfo['staffonly'] && !$mybb->usergroup['canmodcp'])
 {
     $canviewgroup = 0;
 }
-if($mybb->input['action'] == "joingroup")
+$action = "";
+if($mybb->get_input("action"))
+{
+    $action = $mybb->get_input("action");
+}
+if($action == "joingroup")
 {
     //Our function does all the hard work of figuring out if a person can join.
     if($groupinfo['jointype'] == 0)
@@ -63,7 +68,7 @@ if($mybb->input['action'] == "joingroup")
     }
 
 }
-if($mybb->input['action'] == "leavegroup")
+if($action == "leavegroup")
 {
     $socialgroups->socialgroupsuserhandler->remove_member($gid, $uid);
     $message = $lang->socialgroups_left_group;
@@ -75,7 +80,7 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
     eval("\$editgrouplink =\"".$templates->get("socialgroups_edit_group_link")."\";");
     $announcementmoderator = 1;
 }
-if($mybb->input['action'] == "newthread")
+if($action == "newthread")
 {
     if(!in_array($uid, $members))
     {
@@ -100,11 +105,11 @@ if($mybb->input['action'] == "newthread")
         exit;
     }
 }
-if($mybb->input['action'] && $mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
+if($action && $mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
 {
     $allowedaction = array("lock", "unlock", "unapprove", "approve", "sticky", "unsticky");
     $plugins->run_hooks("showgroup_inline_moderation");
-    if(!in_array($mybb->input['action'], $allowedaction))
+    if(!in_array($action, $allowedaction))
     {
         error("Invalid action");
     }
@@ -171,6 +176,7 @@ $memberquery = $db->simple_select("users", "uid,username,usergroup,displaygroup"
 $totalusers = $db->num_rows($memberquery);
 $doneusers = 0;
 $plugins->run_hooks("showgroup_start");
+$joinlink = "";
 if(in_array($uid, $members) && $uid!=$socialgroups->group[$gid]['uid']) // The owner can't leave the group.
 {
     eval("\$joinlink =\"".$templates->get("socialgroups_leave_link")."\";");
@@ -179,6 +185,7 @@ if($socialgroups->socialgroupsuserhandler->can_join($gid, $uid))
 {
     eval("\$joinlink =\"".$templates->get("socialgroups_join_link")."\";");
 }
+$comma = $memberlist = "";
 while($groupmember = $db->fetch_array($memberquery))
 {
     if($doneusers > 50)
@@ -192,8 +199,8 @@ while($groupmember = $db->fetch_array($memberquery))
     eval("\$memberlist .= \"".$templates->get("socialgroups_member")."\";");
     $comma = ", ";
 }
-$comma = "";
 
+$comma = $leaderlist = "";
 $leaderquery = $db->simple_select("users", "uid,username,usergroup,displaygroup", "uid IN(" . implode(",", $leaders) . ")");
 while($groupmember = $db->fetch_array($leaderquery))
 {
@@ -207,8 +214,7 @@ while($groupmember = $db->fetch_array($leaderquery))
 $socialgroups->socialgroupsuserhandler->viewing_group($gid);
 
 // New thread button
-$socialgroups->load_permissions($gid);
-$permissions = $socialgroups->permissions[$gid];
+$permissions = $socialgroups->load_permissions($gid);
 if($permissions['postthreads'] == 1 && in_array($uid, $members) || in_array($uid, $leaders)) // Only members can post threads assuming leaders allow this
 {
     if(!$groupinfo['locked'])
@@ -222,9 +228,11 @@ $parser_options = array(
     "allow_mycode" => 1,
     "allow_smilies"=> 1,
     "filter_badwords" => 1,
+    "allow_html" => 0
 );
 // Handle announcements
 $colspan= 2;
+$announcements =  $announcementlist = $announcementmanage = "";
 foreach($socialgroups->announcements[$gid] as $announcement)
 {
     $plugins->run_hooks("showgroup_announcement");
@@ -255,15 +263,17 @@ foreach($socialgroups->announcements[$gid] as $announcement)
 }
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
 // Thread time
+$modcolumn = "";
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
 }
-if($mybb->input['page'])
+$page = 1;
+if($mybb->get_input("page"))
 {
-    $page = (int) $mybb->input['page'];
+    $page = $mybb->get_input("page", MyBB::INPUT_INT);
 }
-if(!$mybb->input['page'] || $mybb->input['page'] < 1)
+if($page< 1)
 {
     $page = 1;
 }
@@ -282,11 +292,13 @@ if($page > $pages)
 {
     $page = $pages;
 }
-if($mybb->input['sort'])
+$sorturl = "";
+if($mybb->get_input("sort"))
 {
     $sorturl = "&sort=" . $mybb->get_input("sort");
 }
-if($mybb->input['direction'])
+$directionurl = "";
+if($mybb->get_input("direction"))
 {
     $directionurl = "&direction=" . $mybb->get_input("direction");
 }
@@ -297,12 +309,14 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
 {
     ++$colspan;
 }
+$threads = "";
 if(!is_array($threadlist))
 {
     $trow = alt_trow();
     $threadlist = array();
     eval("\$threads =\"".$templates->get("socialgroups_no_threads")."\";");
 }
+$inlinecheckbox = "";
 foreach($threadlist as $thread)
 {
     $trow = alt_trow();
@@ -356,6 +370,7 @@ foreach($threadlist as $thread)
     eval("\$threads .=\"".$templates->get("socialgroups_thread_thread")."\";");
     $stickybit= "";
 }
+$modtools = $addannouncementlink = $managegrouplink = "";
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$modtools =\"".$templates->get("socialgroups_mod_tools")."\";");
@@ -378,7 +393,7 @@ if(!$canviewgroup)
     }
 }
 // Group jump menu
-$groupjumpmenu = "";
+$groupjumpmenu = $groupoptions = $groupjumpmenu = "";
 if($mybb->settings['socialgroups_showgroupjump'] && $uid > 0)
 {
     $query = $db->query("SELECT m.gid, g.name FROM " . TABLE_PREFIX . "socialgroup_members m
@@ -390,6 +405,14 @@ if($mybb->settings['socialgroups_showgroupjump'] && $uid > 0)
         eval("\$groupoptions .=\"".$templates->get("socialgroups_groupjump_group")."\";");
     }
     eval("\$groupjumpmenu =\"".$templates->get("socialgroups_groupjump")."\";");
+}
+if(isset($groupinfo['style']))
+{
+    $styleattribute = $groupinfo['style'];
+}
+else
+{
+    $styleattribute = "";
 }
 $plugins->run_hooks("showgroup_end");
 eval("\$showgrouppage =\"".$templates->get("socialgroups_showgroup_page")."\";");
