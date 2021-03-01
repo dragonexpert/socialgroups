@@ -11,7 +11,12 @@ require_once "global.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
 $haspermission = 0;
-if($socialgroups->socialgroupsuserhandler->is_leader($mybb->user['uid'], $mybb->input['gid']) || $socialgroups->socialgroupsuserhandler->is_moderator($mybb->input['gid'], $mybb->user['uid']))
+$gid = $mybb->get_input("gid", MyBB::INPUT_INT);
+if(!$gid)
+{
+    $socialgroups->error("invalid_group");
+}
+if($socialgroups->socialgroupsuserhandler->is_leader($mybb->user['uid'], $gid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
 {
     $haspermission = 1;
 }
@@ -20,41 +25,46 @@ if(!$haspermission)
     error_no_permission();
 }
 add_breadcrumb($lang->socialgroups, "groups.php");
-if($mybb->input['action'] == "editgroup")
+$action = "";
+if($mybb->get_input("action"))
 {
-    if (!$mybb->input['gid'])
+    $action = $mybb->get_input("action");
+}
+if($action == "editgroup")
+{
+    if (!$mybb->get_input("gid", MyBB::INPUT_INT))
     {
         error_no_permission();
     }
-    if ($mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
+    if ($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
     {
         // The data is escaped in the save function
         $updated_group = array(
-            "name" => $mybb->input['name'],
-            "description" => $mybb->input['description'],
-            "staffonly" => $mybb->input['staffonly'],
-            "private" => $mybb->input['private'],
-            "inviteonly" => $mybb->input['inviteonly'],
-            "cid" => $mybb->input['cid'],
-            "logo" => $mybb->input['logo'],
-            "jointype" => $mybb->input['jointype']
+            "name" => $mybb->get_input("name"),
+            "description" => $mybb->get_input("description"),
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT),
+            "private" => $mybb->get_input("private", MyBB::INPUT_INT),
+            "inviteonly" => $mybb->get_input("inviteonly", MyBB::INPUT_INT),
+            "cid" => $mybb->get_input("cid", MyBB::INPUT_INT),
+            "logo" => $mybb->get_input("logo"),
+            "jointype" => $mybb->get_input("jointype")
         );
         if(isset($mybb->input['locked']))
         {
-            $updated_group['locked'] = (int) $mybb->input['locked'];
+            $updated_group['locked'] = $mybb->get_input("locked", MyBB::INPUT_INT);
         }
-        if ($mybb->input['background_image'])
+        if($mybb->get_input("background_image"))
         {
-            $updated_group['background_image'] = "url(\"" . $mybb->input['background_image'] . "\")";
+            $updated_group['background_image'] = "url(\"" . $mybb->get_input("background_image") . "\")";
         }
-        $socialgroups->socialgroupsdatahandler->save_group($updated_group, "update", "gid=" . (int)$mybb->input['gid']);
-        $url = "showgroup.php?gid=" . (int)$mybb->input['gid'];
+        $socialgroups->socialgroupsdatahandler->save_group($updated_group, "update", "gid=" . $gid);
+        $url = "showgroup.php?gid=" . $gid;
         $message = $lang->socialgroups_group_updated;
         redirect($url, $message);
     }
     else
     {
-        $query = $db->simple_select("socialgroups", "*", "gid=" . $mybb->input['gid']);
+        $query = $db->simple_select("socialgroups", "*", "gid=" . $gid);
         $group = $db->fetch_array($query);
         if (!$group['gid'])
         {
@@ -65,25 +75,31 @@ if($mybb->input['action'] == "editgroup")
         if ($group['private'] == 1)
         {
             $privateyes = 'selected="selected"';
+            $privateno = "";
         }
         else
         {
             $privateno = 'selected="selected"';
+            $privateyes = "";
         }
         if ($group['inviteonly'] == 1)
         {
             $inviteyes = 'selected="selected"';
+            $inviteno = "";
         }
         else
         {
             $inviteno = 'selected="selected"';
+            $inviteyes = "";
         }
+        $jointype = "";
         if($group['jointype'] == 1)
         {
             $jointype = 'selected="selected"';
         }
         $viewablecategories = $socialgroups->get_viewable_categories();
         $categoryselect = "<option value='" . $group['cid'] . "'>" . $viewablecategories[$group['cid']] . "</option>";
+        $staffonly = "";
         foreach ($viewablecategories as $cid => $name)
         {
             eval("\$categoryselect .=\"" . $templates->get("socialgroups_category_select") . "\";");
@@ -101,49 +117,53 @@ if($mybb->input['action'] == "editgroup")
         output_page($editgrouppage);
     }
 }
-if($mybb->input['action'] == "addannouncement")
+if($action == "addannouncement")
 {
-    if($mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
+    $aidinput = "";
+    if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
     {
         $new_announcement = array(
-            "gid" => $mybb->input['gid'],
+            "gid" => $gid,
             "uid" => $mybb->user['uid'],
             "dateline" => TIME_NOW,
-            "subject" => $db->escape_string($mybb->input['subject']),
-            "message" =>$db->escape_string($mybb->input['message']),
-            "active" => $mybb->input['active']
+            "subject" => $db->escape_string($mybb->get_input("subject")),
+            "message" =>$db->escape_string($mybb->get_input("message")),
+            "active" => $mybb->get_input("active", MyBB::INPUT_INT)
         );
         $db->insert_query("socialgroup_announcements", $new_announcement);
-        $url = "showgroup.php?gid=" . $mybb->input['gid'];
+        $url = "showgroup.php?gid=" . $gid;
         $message = $lang->socialgroups_announcement_added;
         redirect($url, $message);
     }
     else
     {
-        $gid = (int) $mybb->input['gid'];
         $action = "addannouncement";
         $groupinfo = $socialgroups->load_group($gid);
+        $announcement = array(
+            "subject" => $mybb->get_input("subject"),
+            "message" => $mybb->get_input("message")
+        );
         add_breadcrumb($groupinfo['name'], "showgroup.php?gid=$gid");
         add_breadcrumb($lang->socialgroups_adding_announcement, "editgroup.php?action=addannouncement");
         eval("\$addannouncementpage =\"".$templates->get("socialgroups_announcement_form")."\";");
         output_page($addannouncementpage);
     }
 }
-if($mybb->input['action'] == "editannouncement")
+if($action == "editannouncement")
 {
-    $aid = (int) $mybb->input['aid'];
-    if($mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
+    $aid = $mybb->get_input("aid", MyBB::INPUT_INT);
+    if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
     {
         $updated_announcement = array(
-            "gid" => $mybb->input['gid'],
+            "gid" => $gid,
             "uid" => $mybb->user['uid'],
             "dateline" => TIME_NOW,
-            "subject" => $db->escape_string($mybb->input['subject']),
-            "message" =>$db->escape_string($mybb->input['message']),
-            "active" => $mybb->input['active']
+            "subject" => $db->escape_string($mybb->get_input("subject")),
+            "message" =>$db->escape_string($mybb->get_input("message")),
+            "active" => $mybb->get_input("active")
         );
         $db->update_query("socialgroup_announcements", $updated_announcement, "aid=$aid");
-        $url = "showgroup.php?gid=" . $mybb->input['gid'];
+        $url = "showgroup.php?gid=" . $gid;
         $message = $lang->socialgroups_announcement_edited;
         redirect($url, $message);
     }
@@ -152,7 +172,6 @@ if($mybb->input['action'] == "editannouncement")
         $query = $db->simple_select("socialgroup_announcements", "*","aid=$aid");
         $announcement = $db->fetch_array($query);
         $aidinput = "<input type='hidden' name='aid' value='{$aid}' />";
-        $gid = (int) $announcement['gid'];
         $groupinfo = $socialgroups->load_group($gid);
         if(!$socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
         {
@@ -165,10 +184,11 @@ if($mybb->input['action'] == "editannouncement")
         output_page($editannouncementpage);
     }
 }
-if($mybb->input['action'] == "deleteannouncement")
+if($action == "deleteannouncement")
 {
-    $aid = (int) $mybb->input['aid'];
+    $aid = $mybb->get_input("aid", MyBB::INPUT_INT);
     $query = $db->simple_select("socialgroup_announcements", "aid,gid", "aid=$aid");
+    $announcementdelete = "";
     $announcement = $db->fetch_array($query);
     /* Don't allow the deletion of global announcements. */
     if(!$announcement['aid'] || $announcement['gid'] == 0)
@@ -179,9 +199,9 @@ if($mybb->input['action'] == "deleteannouncement")
     {
         error_no_permission();
     }
-    if($mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
+    if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
     {
-        if($mybb->input['confirm'] == 1) {
+        if($mybb->get_input("confirm", MyBB::INPUT_INT) == 1) {
             $db->delete_query("socialgroup_announcements", "aid=$aid");
             $url = "showgroup.php?gid=" . $announcement['gid'];
             $message = $lang->socialgroups_announcement_deleted;
@@ -203,9 +223,8 @@ if($mybb->input['action'] == "deleteannouncement")
         output_page($announcementdelete);
     }
 }
-if($mybb->input['action'] == "manage_leaders")
+if($action == "manage_leaders")
 {
-    $gid = (int) $mybb->input['gid'];
     if(!$gid)
     {
         error($lang->socialgroups_invalid_group);
@@ -219,6 +238,7 @@ if($mybb->input['action'] == "manage_leaders")
     add_breadcrumb($lang->socialgroups_manage_leaders, "editgroup.php?action=manage_leaders&amp;gid=$gid");
     $members = $socialgroups->socialgroupsuserhandler->load_members($gid);
     $query = $db->simple_select("users", "uid,username", "uid IN(" . implode(",", $members) . ")", array("order_by" => "username"));
+    $memberlist = "";
     while($member = $db->fetch_array($query))
     {
         if($member['uid'] != $mybb->user['uid'])
@@ -229,11 +249,10 @@ if($mybb->input['action'] == "manage_leaders")
     eval("\$manageleaderpage =\"".$templates->get("socialgroups_manage_leaders_page")."\";");
     output_page($manageleaderpage);
 }
-if($mybb->input['action'] == "add_leader")
+if($action == "add_leader")
 {
-    if($mybb->request_method == "post" && $mybb->input['uid'] && $mybb->input['gid'])
+    if($mybb->request_method == "post" && $mybb->get_input("uid", MyBB::INPUT_INT) && $gid)
     {
-        $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
         $userid = $mybb->get_input("uid", MyBB::INPUT_INT);
         $groupinfo = $socialgroups->load_group($gid);
         if($mybb->user['uid'] != $groupinfo['uid'])
@@ -241,16 +260,15 @@ if($mybb->input['action'] == "add_leader")
             error_no_permission();
         }
         $socialgroups->socialgroupsuserhandler->add_leader($gid, $userid);
-        $url = "showgroup.php?gid=" . $mybb->input['gid'];
+        $url = "showgroup.php?gid=" . $gid;
         $message = $lang->socialgroups_added_leader;
         redirect($url, $message);
     }
 }
-if($mybb->input['action'] == "delete_leader")
+if($action == "delete_leader")
 {
-    if($mybb->request_method == "post" && $mybb->input['uid'] && $mybb->input['gid'])
+    if($mybb->request_method == "post" && $mybb->get_input("uid", MyBB::INPUT_INT) && $gid)
     {
-        $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
         $userid = $mybb->get_input("uid", MyBB::INPUT_INT);
         $groupinfo = $socialgroups->load_group($gid);
         if($mybb->user['uid'] != $groupinfo['uid'])
@@ -258,14 +276,13 @@ if($mybb->input['action'] == "delete_leader")
             error_no_permission();
         }
         $db->delete_query("socialgroup_leaders", "uid=" .  $userid . " AND gid=" . $gid);
-        $url = "showgroup.php?gid=" . $mybb->input['gid'];
+        $url = "showgroup.php?gid=" . $gid;
         $message = $lang->socialgroups_deleted_leader;
         redirect($url, $message);
     }
 }
-if($mybb->input['action'] == "transfer_ownership")
+if($action == "transfer_ownership")
 {
-    $gid = (int) $mybb->input['gid'];
     $groupinfo = $socialgroups->load_group($gid);
     if($mybb->user['uid'] != $groupinfo['uid'])
     {
@@ -273,9 +290,9 @@ if($mybb->input['action'] == "transfer_ownership")
     }
     if($mybb->request_method == "post")
     {
-        if($mybb->input['confirm'] == 1)
+        if($mybb->get_input("confirm", MyBB::INPUT_INT) == 1)
         {
-            $socialgroups->socialgroupsuserhandler->transfer_ownership($mybb->user['uid'], $mybb->input['new_owner'], $gid, $mybb->input['stay_leader']);
+            $socialgroups->socialgroupsuserhandler->transfer_ownership($mybb->user['uid'], $mybb->get_input("new_owner", MyBB::INPUT_INT), $gid, $mybb->get_input("stay_leader", MyBB::INPUT_INT));
             $url = "showgroup.php?gid=$gid";
             $message = $lang->socialgroups_transfer_ownership;
             redirect($url, $message);
@@ -291,6 +308,7 @@ if($mybb->input['action'] == "transfer_ownership")
     add_breadcrumb($lang->socialgroups_transfer_owner, "editgroup.php?action=transfer_ownership&amp;gid=$gid");
     $members = $socialgroups->socialgroupsuserhandler->load_members($gid);
     $query = $db->simple_select("users", "uid,username", "uid IN(" . implode(",", $members) . ")", array("order_by" => "username"));
+    $memberlist = "";
     while($member = $db->fetch_array($query))
     {
         if($member['uid'] != $mybb->user['uid'])
