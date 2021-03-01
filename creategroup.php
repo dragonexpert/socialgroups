@@ -31,13 +31,13 @@ if($mybb->request_method=="post" && verify_post_check($mybb->input['my_post_key'
         "name" => $db->escape_string($mybb->get_input('name')),
         "description" => $db->escape_string($mybb->get_input('description')),
         "logo" => $db->escape_string($mybb->get_input('logo')),
-        "cid" => (int) $mybb->input['cid'],
+        "cid" => $mybb->get_input("cid", MyBB::INPUT_INT),
         "approved" => $mybb->usergroup['socialgroups_auto_approve'],
-        "private" => (int) $mybb->input['private'],
-        "staffonly" => (int) $mybb->input['staffonly'],
-        "inviteonly" => (int) $mybb->input['inviteonly'],
+        "private" => $mybb->get_input("private", MyBB::INPUT_INT),
+        "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT),
+        "inviteonly" => $mybb->get_input("inviteonly", MyBB::INPUT_INT),
         "uid" => (int) $mybb->user['uid'],
-        "jointype" => $mybb->input['jointype']
+        "jointype" => $mybb->get_input("jointype")
     );
     $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
     if($new_group['approved'] == 0)
@@ -48,10 +48,12 @@ if($mybb->request_method=="post" && verify_post_check($mybb->input['my_post_key'
 }
 // Get the category list.
 $viewablecategories = $socialgroups->get_viewable_categories();
+$categoryselect = "";
 foreach($viewablecategories as $cid => $name)
 {
     eval("\$categoryselect .=\"".$templates->get("socialgroups_category_select")."\";");
 }
+$staffonly = $locked = "";
 if($mybb->usergroup['canmodcp'])
 {
     eval("\$staffonly =\"".$templates->get("socialgroups_staffonly")."\";");
