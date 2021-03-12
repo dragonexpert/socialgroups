@@ -122,6 +122,13 @@ class socialgroupsdatahandler
         {
             return false;
         }
+        // Get the data about a group.
+        $groupquery = $db->simple_select("socialgroups", "*", "gid=" . $gid);
+        $data = $db->fetch_array($groupquery);
+        if(!$data['gid'])
+        {
+            return false;
+        }
         $plugins->run_hooks("socialgroupsdatahandler_delete_group");
         $db->delete_query("socialgroups", "gid=$gid");
         $db->delete_query("socialgroup_members", "gid=$gid");
@@ -131,6 +138,12 @@ class socialgroupsdatahandler
         $db->delete_query("socialgroup_announcements", "gid=$gid");
         $db->delete_query("socialgroup_threads", "gid=$gid");
         $db->delete_query("socialgroup_posts", "gid=$gid");
+        $query = $db->simple_select("socialgroups", "COUNT(gid) AS category_count", "cid=" . $data['cid']);
+        $category_count = $db->fetch_field($query, "category_count");
+        $update_category = array(
+            "groups" => $category_count
+        );
+        $db->update_query("socialgroup_categories", $update_category, "cid=" . $data['cid']);
         $socialgroups->update_cache();
         $socialgroups->update_socialgroups_category_cache();
         return true;
