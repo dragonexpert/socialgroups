@@ -19,11 +19,13 @@ if(!$groups)
 {
     error_no_permission();
 }
+$title = "Group CP";
 add_breadcrumb($lang->socialgroups, "groups.php");
 add_breadcrumb("Group CP", "groupcp.php");
 if($mybb->get_input("gid"))
 {
     $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
+    $where = "gid=" . $gid;
     $groupinfo = $socialgroups->load_group($gid);
 
     // Validate if the person is in fact a group leader for the specific group
@@ -38,6 +40,7 @@ if($mybb->get_input("gid"))
 
     if($mybb->get_input("action") == "add_member")
     {
+        $title = "Add Member";
         if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
         {
             if($mybb->get_input("userid") != 0)
@@ -82,6 +85,7 @@ if($mybb->get_input("gid"))
 
     if($mybb->get_input("action") == "remove_member")
     {
+        $title = "Remove Member";
         if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
         {
             if($mybb->get_input("userid") != 0)
@@ -119,6 +123,7 @@ if($mybb->get_input("gid"))
 
     if($mybb->get_input("action") == "approve_join_request" && $mybb->get_input("rid"))
     {
+        $title = "Join Request Approved";
         $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_joinrequests 
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
@@ -157,6 +162,7 @@ if($mybb->get_input("gid"))
     }
     if($mybb->get_input("action") == "delete_request" && $mybb->get_input("rid"))
     {
+        $title = "Join Request Deleted";
         $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->simple_select("socialgroup_join_requests", "*", "rid=$rid AND gid=" . $groupinfo['gid']);
         $request = $db->fetch_array($query);
@@ -171,6 +177,7 @@ if($mybb->get_input("gid"))
     }
     if($mybb->get_input("action") == "deny_request" && $mybb->get_input("rid"))
     {
+        $title = "Join Request Denied";
         $rid = $mybb->get_input("rid", MyBB::INPUT_INT);
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_joinrequests 
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
@@ -207,6 +214,7 @@ if($mybb->get_input("gid"))
     }
     if($mybb->get_input("action") == "join_requests")
     {
+        $title = "Join Request Management";
         add_breadcrumb("Join Requests", "groupcp.php?action=join_requests");
         $query = $db->query("SELECT r.*, u.username FROM " . TABLE_PREFIX . "socialgroup_join_requests r
         LEFT JOIN " . TABLE_PREFIX . "users u ON(r.uid=u.uid)
@@ -283,6 +291,7 @@ if($mybb->get_input("gid"))
 
     if($mybb->get_input("action") == "add_leader")
     {
+        $title = "Add Leader";
         if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
         {
             // This function handles validation.
@@ -317,6 +326,7 @@ if($mybb->get_input("gid"))
     }
     if($mybb->get_input("action") == "remove_leader")
     {
+        $title = "Remove Leader";
         if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
         {
             $success = $socialgroups->socialgroupsuserhandler->remove_leader($gid, $mybb->input['leader']);
@@ -359,6 +369,7 @@ else
     }
 }
 $groupquery = $db->simple_select("socialgroups", "*", $where);
+$addremoveleaders = $lockgroup = $grouplist = "";
 while($group = $db->fetch_array($groupquery))
 {
     $group['name'] = htmlspecialchars_uni($group['name']);
