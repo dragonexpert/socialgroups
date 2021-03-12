@@ -502,7 +502,7 @@ class socialgroupsthreadhandler
         FROM " . TABLE_PREFIX . "socialgroup_posts p
         LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
         LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
-        LEFT JOIN ".TABLE_PREFIX."userfields f ON (f.ufid=u.uid)
+        LEFT JOIN ".TABLE_PREFIX."userfields f ON (u.uid=f.ufid)
         LEFT JOIN ".TABLE_PREFIX."users eu ON (eu.uid=p.lasteditby)
         WHERE p.tid=$tid AND t.visible >=$visible AND p.visible >= $visible
         ORDER BY p.dateline ASC
