@@ -1,51 +1,81 @@
 Group CP
-- Add / Remove Leaders ( Group Owner Only ) * Complete *
-- Edit Group Link ( Group Leaders / Moderators ) * Complete *
-- Manage Join Requests ( Group Leaders ) * Complete *
-- Add / Remove Members * Complete *
-- Lock Group ( Moderators Only ) * Complete *
+- Add / Remove Leaders ( Group Owner Only ) 
+- Edit Group Link ( Group Leaders / Moderators ) 
+- Manage Join Requests ( Group Leaders )
+- Add / Remove Members
+- Lock Group ( Moderators Only )
 
 Groups
-- Create Group Button * Complete *
-- Filter by category * Complete *
-- Search for group name * Complete *
-- Sort by name, threads, post, and creator * Complete *
-- List users browsing * Complete *
+- Create Group Button 
+- Filter by category 
+- Search for group name 
+- Sort by name, threads, post, and creator 
+- List users browsing 
 
 Showgroup
-- List users browsing group * Complete *
-- List Group Members * Complete *
-- List Group Leaders * Complete *
-- Show Global Announcements * Complete *
-- Show group specific announcement * Complete *
-- Thread preview * Complete *
-- New thread link * Complete *
-- Group Logo * Complete *
-- Implement Group Jump Menu * Complete *
-- Implement Invite Only
-- Implement Private Group * Complete *
-- Implement Locked Group * Complete *
-- Implement Staff Only Group ( Moderators+ ) * Complete *
-- Implement Join Types: ( Instant, Approval Required ) * Complete *
-- Inline Thread Moderation * Complete *
+- List users browsing group 
+- List Group Members 
+- List Group Leaders 
+- Show Global Announcements 
+- Show group specific announcement 
+- Thread preview 
+- New thread link 
+- Group Logo 
+- Implement Group Jump Menu 
+- Implement Private Group
+- Implement Locked Group 
+- Implement Staff Only Group ( Moderators+ ) 
+- Implement Join Types: ( Instant, Approval Required ) 
+- Inline Thread Moderation 
 
 Admin Modules
-- Templates - Easily update, export, and download templates for Social Groups. * Complete *
-- Leader Management * Complete *
-- Category Management * Complete *
-- Moderator Management * Complete *
-- Global Announcements * Complete *
-- Admin Permissions * Complete *
+- Templates - Easily update, export, and download templates for Social Groups. 
+- Leader Management 
+- Category Management 
+- Moderator Management 
+- Global Announcements 
+- Admin Permissions 
 
 Moderator CP
-- Log moderator actions. * Complete *
+- Log moderator actions. 
 
 
 Plugin Hooks
 groups.php
-showgroup.php
-groupthread.php
-groupcp.php
+None at the moment
 
-Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. * Complete *
-Custom CSS on a per group basis.
+showgroup.php
+None at the moment
+
+groupthread.php
+- groupthread_start
+- groupthread_post_post
+- groupthread_quickreply
+- groupthread_end
+
+groupcp.php
+None at the moment
+
+inc/plugins/socialgroups/classes/socialgroups.php
+- socialgroups_constructor
+- socialgroups_breadcrumb_link
+- class_socialgroups_load_group
+
+inc/plugins/socialgroups/classes/socialgroupsdatahandler.php
+- class_socialgroups_socialgroupsdatahandler_save_fields
+- socialgroupsdatahandler_delete_group
+
+inc/plugins/socialgroups/classes/socialgroupsthreadhandler.php
+- socialgroupsthreadhandler_insert_thread
+- socialgroupsthreadhandler_insert_post
+- socialgroups_update_post
+
+Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. 
+
+Planned Features ( These are features not implented in this release, but will be in the future. )
+- Implement Invite Only
+- Custom CSS on a per group basis.
+- Ability to upload a group logo instead of just entering an url.
+- Attachments in posts
+- Support for SQLite and PGSQL
+- Reporting posts
