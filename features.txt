@@ -57,18 +57,38 @@ groupcp.php
 None at the moment
 
 inc/plugins/socialgroups/classes/socialgroups.php
-- socialgroups_constructor
-- socialgroups_breadcrumb_link
-- class_socialgroups_load_group
+- class_socialgroups_constructor
+- class_socialgroups_error
+- class_socialgroups_breadcrumb_link
+- class_socialgroups_load_group $groups[$gid]
+- class_socialgroups_load_group_no_cache $group
+- class_socialgroups_load_permissions $this->permissions[$gid]
+- class_socialgroups_list_groups $this->group_list[$group['cid']][$group['gid']]
+- class_socialgroups_render_group $subkey
+- class_socialgroups_get_viewable_categories $category
+- class_socialgroups_destructor
 
 inc/plugins/socialgroups/classes/socialgroupsdatahandler.php
-- class_socialgroups_socialgroupsdatahandler_save_fields
-- socialgroupsdatahandler_delete_group
+- class_socialgroupsdatahandler_save_fields
+- class_socialgroupsdatahandler_update_group
+- class_socialgroupsdatahandler_insert_group
+- class_socialgroupsdatahandler_delete_group
 
 inc/plugins/socialgroups/classes/socialgroupsthreadhandler.php
-- socialgroupsthreadhandler_insert_thread
-- socialgroupsthreadhandler_insert_post
-- socialgroups_update_post
+- class_socialgroupsthreadhandler_insert_thread
+- class_socialgroupsthreadhandler_insert_post
+- class_socialgroupsthreadhandler_update_post
+- class_socialgroupsthreadhandler_delete_post
+- class_socialgroupsthreadhandler_delete_thread
+- class_socialgroupsthreadhandler_load_thread $thread
+- class_socialgroupsthreadhandler_load_post $post
+
+inc/plugins/socialgroups/classes/socialgroupsuserhandler.php
+- class_socialgroupsuserhandler_can_join $status
+- class_socialgroupsuserhandler_join_group
+- class_socialgroupsuserhandler_remove_member
+- class_socialgroupsuserhandler_add_leader
+- class_socialgroupsuserhandler_remove_leader
 
 Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. 
 
@@ -80,3 +100,5 @@ Planned Features ( These are features not implented in this release, but will be
 - Support for SQLite and PGSQL
 - Reporting posts
 - More hooks in certain areas
+- Import .json files to edit a theme of choice.
+- Link to groups you are in when viewing User CP.
