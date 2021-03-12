@@ -79,3 +79,4 @@ Planned Features ( These are features not implented in this release, but will be
 - Attachments in posts
 - Support for SQLite and PGSQL
 - Reporting posts
+- More hooks in certain areas
