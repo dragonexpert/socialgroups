@@ -1,0 +1,42 @@
+**********************************Socialgroups Plugin License Information****************************************************************************
+Plugin Author: Mark Janssen
+
+License Terms:
+You are allowed to modify your own copy of the Socialgroups Plugin.  You may not distribute such edits to other users.
+You are allowed to submit Pull Requests on Github to resolve issues or add functionality. If you are not sure whether
+something can be part of the core or would be better off as an extension of Socialgroups, you may ask. There are hooks
+throughout the code to work with and we are able to add more if more are needed.
+
+Data Collection:
+The Socialgroups Plugin collects certain data about your forum.  This data is used to help provide support to your forum and to
+improve the product.
+
+What information is collected?
+The current version of PHP you are using is collected. This is necessary because some functions may not work properly in all PHP
+versions.  The current type and version of the database software you are using. This is necessary because different database
+environments behave differently. The domain is collected because this way it is easy to navigate to the website in order to try
+and observe and reproduce an issue.  The number of users, posts, threads, and socialgroups created are collected.
+
+Can I stop this data collection?
+This data collection constitutes part of the agreement to use the plugin.  It will not be shared with other companies.
+
+Is the data collected shared with other companies?
+The data collected is not shared with any other company.  It is solely used for the purpose of providing support to customers and
+improving the product.
+
+What support is offered?
+Support is offered for the plugin.  For now you may post on the official MyBB Forum Website.  At a later date a new system
+will be rolled out to make it easier to provide support.
+
+Are there plugins that expand the features of Socialgroups Plugin?
+Various developers may create plugins that expand the capabilities of socialgroups.  We used the plugin system when developing it
+for this very purpose.  Developers can release these plugins either free or paid.  Copyright for such plugins belongs to the
+respective author.
+
+Are there themes for the Socialgroups Plugin?
+Designers have the ability to share and sell themes for the Socialgroups Plugin. The designer of the theme has the choice of making it be paid or free.
+The copyright for shared themes belongs to the respective author.
+
+Is there a process I must go through to sell Themes or Plugins that involve Socialgroups?
+There is no special process to be allowed to sell Themes and Plugins for Socialgroups.  If you are releasing a theme and it uses
+additional plugins that expand socialgroups, you need to get permission from the author of that plugin to include those features.
