@@ -13,7 +13,7 @@ require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $lang->load("showthread");
 // We'll use the tid to get the group.
-$tid = (int) $mybb->input['tid'];
+$tid = $mybb->get_input("tid", MyBB::INPUT_INT);
 $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
 $threadinfo = $db->fetch_array($query);
 $db->free_result($query);
@@ -21,6 +21,7 @@ if(!$threadinfo['tid'])
 {
     error_no_permission();
 }
+$title = htmlspecialchars_uni($threadinfo['subject']);
 $uid= $mybb->user['uid'];
 $gid = $threadinfo['gid'];
 $socialgroups = new socialgroups($gid, 1);
@@ -37,6 +38,7 @@ if($groupinfo['staffonly'] && !$mybb->usergroup['canmodcp'])
 {
     error_no_permission();
 }
+$grouplogo = "";
 if($groupinfo['logo'])
 {
     eval("\$grouplogo =\"".$templates->get("socialgroups_logo")."\";");
@@ -49,12 +51,13 @@ $members = $socialgroups->socialgroupsuserhandler->members[$gid];
 $leaders = $socialgroups->socialgroupsuserhandler->leaders[$gid];
 $socialgroups->load_permissions($gid);
 $permissions = $socialgroups->permissions[$gid];
-if($mybb->input['action'])
+$action = "";
+if($mybb->get_input("action"))
 {
     $action = $mybb->get_input("action");
 }
 $plugins->run_hooks("groupthread_start");
-if($action == "reply" && $mybb->request_method== "post" && verify_post_check($mybb->input['my_post_key']))
+if($action == "reply" && $mybb->request_method== "post" && verify_post_check($mybb->get_input("my_post_key")))
 {
     // We use the thread handler here.
     if(!in_array($uid, $members) && !in_array($uid, $leaders) || $groupinfo['locked']
@@ -72,9 +75,9 @@ if($action == "reply" && $mybb->request_method== "post" && verify_post_check($my
 $verifyactions = array("deletepost", "lock", "unlock", "unapprove", "approve", "sticky", "unsticky");
 if(in_array($action, $verifyactions))
 {
-    verify_post_check($mybb->input['my_post_key']);
+    verify_post_check($mybb->get_input("my_post_key"));
 }
-if($action == "deletepost" && $mybb->input['pid'])
+if($action == "deletepost" && $mybb->get_input("pid"))
 {
     $socialgroups->socialgroupsthreadhandler->delete_post($mybb->get_input("pid", MyBB::INPUT_INT), $gid, 0);
 }
@@ -116,7 +119,7 @@ if($action == "unsticky")
     $message = "The thread has been unstuck.";
     $modaction = "Unstuck Thread";
 }
-if($mybb->input['my_post_key'] && $action != "reply")
+if($mybb->get_input("my_post_key") && $action != "reply")
 {
     $data = array(
         "gid" => $gid,
@@ -138,13 +141,10 @@ $query = $db->simple_select("socialgroup_posts", "COUNT(pid) as total", "tid=$ti
 $total = $db->fetch_field($query, "total");
 $db->free_result($query);
 $pages = ceil($total / 20);
-if($mybb->input['page'])
+$page = 1;
+if($mybb->get_input("page"))
 {
-    $page = (int) $mybb->input['page'];
-}
-else
-{
-    $page = 1;
+    $page = $mybb->get_input("page", MyBB::INPUT_INT);
 }
 if($page < 1)
 {
@@ -164,9 +164,11 @@ $forum = array(
     "allowimgcode" => 1,
     "allowvideocode" => 1
 );
+
+$classic_header = "";
+$postlist = "";
 foreach($posts as $post)
 {
-    $classic_header = '';
     if($mybb->settings['postlayout'] == "classic")
     {
         eval("\$classic_header = \"".$templates->get("showthread_classic_header")."\";");
@@ -175,13 +177,13 @@ foreach($posts as $post)
     $postlist .= build_postbit($post);
 }
 // Figure out if the member can reply to the thread.
-$canreply = FALSE;
+$canreply = false;
 
 if($threadinfo['closed'] == 0)
 {
     if(in_array($uid,$members) && $permissions['postreplies'] == 1)
     {
-        $canreply= TRUE;
+        $canreply= true;
     }
     if($groupinfo['locked'])
     {
@@ -190,25 +192,29 @@ if($threadinfo['closed'] == 0)
 }
 if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid) ||$socialgroups->socialgroupsuserhandler->is_leader($gid, $uid))
 {
-    $canreply = TRUE;
+    $canreply = true;
 }
 if($groupinfo['locked'])
 {
     $canreply = false;
 }
+$replyboxmod = $newreply = $replybox = $message = $codebuttons = $smileys = "";
+$ismod = false;
 if($canreply)
 {
     $codebuttons = build_mycode_inserter();
-    $smileys = build_clickable_smilies();
+    $smilieinserter = build_clickable_smilies();
     $plugins->run_hooks("groupthread_quickreply");
     if(in_array($uid, $leaders) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
     {
-        $ismod = TRUE;
+        $ismod = true;
+        $closedchecked = "";
         if($threadinfo['closed'])
         {
             $closedchecked = "checked=\"checked\"";
             $trow = "trow_shaded";
         }
+        $stickycheck = "";
         if($threadinfo['sticky'])
         {
             $stickycheck = "checked=\"checked\"";
@@ -221,12 +227,13 @@ if($canreply)
     }
     eval("\$replybox =\"".$templates->get("socialgroups_replybox")."\";");
 }
+$modtools = "";
 if($ismod)
 {
     eval("\$modtools =\"".$templates->get("socialgroups_thread_tools")."\";");
 }
 // Group jump menu
-$groupjumpmenu = "";
+$groupjumpmenu = $groupoptions = "";
 if($mybb->settings['socialgroups_showgroupjump'] && $mybb->user['uid'] > 0)
 {
     $query = $db->query("SELECT m.gid, g.name FROM " . TABLE_PREFIX . "socialgroup_members m

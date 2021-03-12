@@ -3,7 +3,8 @@
 * Normally you would evaluate templates, but for demonstration purposes echo is used.*/
 define("IN_MYBB", 1);
 define("THIS_SCRIPT", "groups.php");
-$templatelist = "socialgroups_category,socialgroups_group,socialgroups_groups,socialgroups_category_split,socialgroups_clear,socialgroups_create_group_button";
+$templatelist = "socialgroups_category,socialgroups_group,socialgroups_groups,socialgroups_category_split";
+$templatelist .= ",socialgroups_clear,socialgroups_create_group_button,socialgroups_logo";
 require_once "global.php";
 $lang->load("socialgroups");
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";

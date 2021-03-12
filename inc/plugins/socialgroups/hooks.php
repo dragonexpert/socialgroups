@@ -11,6 +11,7 @@ if(!defined("IN_MYBB"))
 
 $plugins->add_hook("admin_load", "socialgroups_admin_load");
 $plugins->add_hook("global_start", "socialgroups_global_start");
+$plugins->add_hook("global_intermediate", "socialgroups_global_intermediate");
 $plugins->add_hook("admin_formcontainer_end", "socialgroups_admin_formcontainer_end");
 $plugins->add_hook("admin_user_groups_edit_commit", "socialgroups_admin_user_groups_edit_commit");
 $plugins->add_hook("modcp_modlogs_start", "socialgroups_modcp_modlogs_start");
@@ -31,7 +32,22 @@ function socialgroups_global_start()
     global $groupzerogreater, $mybb, $mybbgroups, $templatelist;
     $groupzerogreater[] = "maxsocialgroups_create";
 //    $mybb->usergroup = usergroup_permissions($mybbgroups);
-    $templatelist .= ",socialgroups_modcp_logitem";
+    $templatelist .= ",socialgroups_modcp_logitem,socialgroups_welcomeblock_member,socialgroups_welcomeblock_admin";
+}
+
+function socialgroups_global_intermediate()
+{
+    global $mybb, $socialgroups, $templates, $socialgroupslink;
+    if(!is_object($socialgroups))
+    {
+        require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
+        $socialgroups = new socialgroups();
+    }
+    if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+    {
+        eval("\$socialgroupscplink = \"".$templates->get("socialgroups_welcomeblock_admin")."\";");
+    }
+    eval("\$socialgroupslink = \"".$templates->get("socialgroups_welcomeblock_member")."\";");
 }
 
 function socialgroups_admin_formcontainer_end()
