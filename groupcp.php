@@ -77,6 +77,7 @@ if($mybb->get_input("gid"))
         }
         else
         {
+            add_breadcrumb("Add Member", "groupcp.php?action=add_member");
             eval("\$add_member_form = \"".$templates->get("socialgroups_add_member_form")."\";");
             output_page($add_member_form);
             exit;
@@ -115,6 +116,7 @@ if($mybb->get_input("gid"))
         }
         else
         {
+            add_breadcrumb("Remove Member", "groupcp.php?action=remove_member");
             eval("\$remove_member_form = \"".$templates->get("socialgroups_remove_member_form")."\";");
             output_page($remove_member_form);
             exit;
@@ -307,6 +309,7 @@ if($mybb->get_input("gid"))
         }
         else
         {
+            add_breadcrumb("Add Leader", "groupcp.php?action=add_leader");
             $query = $db->query("SELECT sgm.uid, u.username FROM " . TABLE_PREFIX . "socialgroup_members sgm
             LEFT JOIN " . TABLE_PREFIX . "users u ON(sgm.uid=u.uid)
             ORDER BY u.username ASC");
@@ -341,6 +344,7 @@ if($mybb->get_input("gid"))
         }
         else
         {
+            add_breadcrumb("Remove Leader", "groupcp.php?action=remove_leader");
             $query = $db->query("SELECT l.uid, u.username FROM " . TABLE_PREFIX . "socialgroup_leaders l
             LEFT JOIN " . TABLE_PREFIX . "users u ON(l.uid=u.uid)
             ORDER BY u.username ASC");
