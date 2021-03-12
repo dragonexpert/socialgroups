@@ -46,7 +46,7 @@ class socialgroupsdatahandler
         );
 
         // Let other plugins be able to hook into this.
-        $plugins->run_hooks("class_socialgroups_socialgroupsdatahandler_save_fields", $fieldtypes);
+        $plugins->run_hooks("class_socialgroupsdatahandler_save_fields", $fieldtypes);
 
         foreach($data as $key => $value)
         {
@@ -88,6 +88,7 @@ class socialgroupsdatahandler
         if($method == "update")
         {
             $db->update_query("socialgroups", $data, $where);
+            $plugins->run_hooks("class_socialgroupsdatahandler_update_group");
         }
         if($method == "insert")
         {
@@ -96,6 +97,7 @@ class socialgroupsdatahandler
                 $data['uid'] = $mybb->user['uid'];
             }
             $gid = $db->insert_query("socialgroups", $data);
+            $plugins->run_hooks("class_socialgroupsdatahandler_insert_group");
             $socialgroups->socialgroupsuserhandler->join($gid, $data['uid'], 1);
             $socialgroups->socialgroupsuserhandler->add_leader($gid, $data['uid']);
             // Need to update the number of groups in a category

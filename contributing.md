@@ -12,6 +12,7 @@ Once MyBB is fully PHP 8 compatibile, we can consider updating code then.
 I know some parts of this extension might not be and we will have to address that gradually.  The main thing to watch out for is undefined variables and illegal offset.
 - Any actions that should be performed on MyBB Hooks need to be in inc/plugins/socialgroups/hooks.php.  This keeps it easy to maintain. The function you create
 should be named socialgroups_(Hook_Name) because this way it will not intefere with any other plugins and it is easy to know what hook it is attached to.
+- When you create hooks, it should follow an easy to decipher system.  If it is a class file the hook should be class_classname_something_descritive.  If it is not a class file, the hook should start with the name of the file and then a descriptor.  Example showgroup_begin.
 
 - Please put comments in the code where things can get complicated.  You don't need to write a novel, but at least something will make it easier to understand.
 - I prefer braces on their own line for control statements and functions / methods.  

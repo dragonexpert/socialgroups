@@ -63,7 +63,7 @@ class socialgroupsthreadhandler
             redirect("showgroup.php?gid=" . (int) $data['gid']);
         }
         // Otherwise we are good to go. :)
-        $plugins->run_hooks("socialgroupsthreadhandler_insert_thread");
+        $plugins->run_hooks("class_socialgroupsthreadhandler_insert_thread");
         $tid = $db->insert_query("socialgroup_threads", $new_thread);
         // Get the data for the post
         $new_post = array(
@@ -123,7 +123,7 @@ class socialgroupsthreadhandler
             "message" => $db->escape_string($data['message'])
         );
         $cutoff = TIME_NOW - 3600; /* 1 hour post merge */
-        $plugins->run_hooks("socialgroupsthreadhandler_insert_post");
+        $plugins->run_hooks("class_socialgroupsthreadhandler_insert_post");
         // Flood check
         $query = $db->simple_select("socialgroup_posts", "pid, editcount, uid, message, dateline", "tid=" . $new_post['tid'] . " ORDER BY dateline DESC LIMIT 1");
         $postinfo = $db->fetch_array($query);
@@ -191,7 +191,7 @@ class socialgroupsthreadhandler
             "lasteditby" => $mybb->user['uid'],
         );
 
-        $plugins->run_hooks("socialgroups_update_post");
+        $plugins->run_hooks("class_socialgroupsthreadhandler_update_post");
         $db->update_query("socialgroup_posts", $updated_post, "pid=" . $postinfo['pid']);
         $this->recount_posts($postinfo['gid'], $postinfo['tid']);
         $this->recount_threads($postinfo['gid']);
@@ -208,7 +208,7 @@ class socialgroupsthreadhandler
 
     public function delete_post(int $pid=0, int $gid=0, int $permanent=0)
     {
-        global $mybb, $db, $lang, $socialgroups;
+        global $mybb, $db, $lang, $socialgroups, $plugins;
         if(!$pid)
         {
             $this->error("invalid_post");
@@ -227,6 +227,7 @@ class socialgroupsthreadhandler
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
             WHERE p.pid=$pid");
             $thread = $db->fetch_array($query);
+            $plugins->run_hooks("class_socialgroupsthreadhandler_delete_post");
             if($permanent == 1)
             {
                 $db->delete_query("socialgroup_posts", "pid=$pid");
@@ -262,7 +263,7 @@ class socialgroupsthreadhandler
 
     public function delete_thread(int $tid=0, int $gid=0, int $permanent=0)
     {
-        global $db, $mybb, $lang, $socialgroups;
+        global $db, $mybb, $lang, $socialgroups, $plugins;
         if(!$tid)
         {
             $this->error("invalid_thread");
@@ -270,6 +271,7 @@ class socialgroupsthreadhandler
         // Fetch the thread info
         $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
         $thread = $db->fetch_array($query);
+        $plugins->run_hooks("class_socialgroupsthreadhandler_delete_thread");
         if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid'] && $permanent == 1))
         {
             $db->delete_query("socialgroup_threads", "tid=$tid");
@@ -341,7 +343,7 @@ class socialgroupsthreadhandler
 
     public function load_threads(int $gid=1, $page=1, $perpage=20, $sort=array())
     {
-        global $mybb, $db, $socialgroups;
+        global $mybb, $db, $socialgroups, $plugins;
         // First we have to see if the user can even see threads.
         if($mybb->usergroup['isbannedgroup'])
         {
@@ -441,6 +443,7 @@ class socialgroupsthreadhandler
             }
             $thread['dateline'] = my_date("relative", $thread['dateline']);
             $thread['lastposttime'] = my_date("relative", $thread['lastposttime']);
+            $thread = $plugins->run_hooks("class_socialgroupsthreadhandler_load_thread", $thread);
             $socialgroups->threads[$gid][$thread['tid']] = $thread;
         }
         return $socialgroups->threads[$gid];
@@ -456,7 +459,7 @@ class socialgroupsthreadhandler
      */
     public function load_posts(int $gid=0, int $tid=0, int $page=1, int $perpage=20)
     {
-        global $db, $mybb, $cache, $templates, $socialgroups;
+        global $db, $mybb, $cache, $templates, $socialgroups, $plugins;
         if(!$tid)
         {
             $socialgroups->error("invalid_thread");
@@ -509,6 +512,7 @@ class socialgroupsthreadhandler
         LIMIT $start , $perpage");
         while($post = $db->fetch_array($query))
         {
+            $post = $plugins->run_hooks("class_socialgroupsthreadhandler_load_post", $post);
             $socialgroups->posts[$tid][$post['pid']] = $post;
         } // End the post loop
         return $socialgroups->posts[$tid];

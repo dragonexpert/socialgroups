@@ -242,7 +242,7 @@ class socialgroupsuserhandler
 
     public function can_join(int $gid=1, int $uid=0): bool
     {
-        global $mybb, $socialgroups;
+        global $mybb, $socialgroups, $plugins;
         if(!$gid)
         {
             return false;
@@ -260,31 +260,34 @@ class socialgroupsuserhandler
         {
             $uid = $mybb->user['uid'];
         }
+        $status = true;
         if(!$uid) // it must be a guest
         {
-            return false;
+            $status = false;
         }
         if($this->is_member($gid, $uid))
         {
-            return false;
+            $status = false;
         }
         if($socialgroups->group[$gid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
-            return false;
+            $status = false;
         }
         if($socialgroups->category[$cid]['staffonly'] && !$this->is_moderator($gid, $uid))
         {
-            return false;
+            $status = false;
         }
         if($socialgroups->group[$gid]['inviteonly'] && !$this->has_invite($gid, $uid))
         {
-            return false;
+            $status = false;
         }
         if($socialgroups->group[$gid]['jointype'] == 1 && $this->has_join_request($gid, $uid))
         {
-            return false;
+            $status = false;
         }
-        return true;
+        // Hook in case you want to work with Newpoints or some other stuff
+        $status = $plugins->run_hooks("class_socialgroupsuserhandler_can_join", $status);
+        return $status;
     }
 
     /**
@@ -346,7 +349,7 @@ class socialgroupsuserhandler
 
     public function join(int $gid=0, int $uid=0, int $force=0)
     {
-        global $db, $mybb, $socialgroups;
+        global $db, $mybb, $socialgroups, $plugins;
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
@@ -363,6 +366,7 @@ class socialgroupsuserhandler
         $db->insert_query("socialgroup_members", $new_member);
         $db->delete_query("socialgroup_invites", "touid=$uid AND gid=$gid");
         $db->delete_query("socialgroup_join_requests", "uid=$uid AND gid=$gid");
+        $plugins->run_hooks("class_socialgroupsuserhandler_join_group");
     }
 
     /**
@@ -373,7 +377,7 @@ class socialgroupsuserhandler
 
     public function remove_member(int $gid=0, int $uid=0)
     {
-        global $mybb, $db, $socialgroups;
+        global $mybb, $db, $socialgroups, $plugins;
         if(!$this->is_member($gid, $uid) || $this->is_leader($gid, $uid))
         {
             $socialgroups->error("invalid_user");
@@ -383,6 +387,7 @@ class socialgroupsuserhandler
             $uid = $mybb->user['uid'];
         }
         $db->delete_query("socialgroup_members", "uid=$uid AND gid=$gid");
+        $plugins->run_hooks("class_socialgroupsuserhandler_remove_member");
     }
 
     /**
@@ -394,7 +399,7 @@ class socialgroupsuserhandler
 
     public function add_leader(int $gid=0, int $uid=0)
     {
-        global $db, $mybb;
+        global $db, $mybb, $plugins;
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
@@ -409,6 +414,7 @@ class socialgroupsuserhandler
             "uid" =>  $uid
         );
         $lid = $db->insert_query("socialgroup_leaders", $new_leader);
+        $plugins->run_hooks("class_socialgroupsuserhandler_add_leader");
         return $lid;
     }
 
@@ -422,10 +428,9 @@ class socialgroupsuserhandler
 
     public function remove_leader(int $gid=0, int $uid=0, bool $admin_overide = false): bool
     {
-        global $db, $mybb, $socialgroups;
+        global $db, $mybb, $socialgroups, $plugins;
         // First load the group.
         $groupinfo = $socialgroups->load_group($gid);
-        $uid = (int) $uid;
         if($admin_overide)
         {
             if(!$mybb->usergroup['cancp'])
@@ -440,6 +445,7 @@ class socialgroupsuserhandler
             if($this->is_leader($gid, $uid))
             {
                 $db->delete_query("socialgroup_leaders", "uid=" . $uid);
+                $plugins->run_hooks("class_socialgroupsuserhandler_remove_leader");
                 return true;
             }
             return false;
@@ -457,6 +463,7 @@ class socialgroupsuserhandler
             if($this->is_leader($gid, $uid))
             {
                 $db->delete_query("socialgroup_leaders", "uid=" . $uid);
+                $plugins->run_hooks("class_socialgroupsuserhandler_remove_leader");
                 return true;
             }
             return false;

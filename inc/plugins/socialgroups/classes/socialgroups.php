@@ -116,7 +116,7 @@ class socialgroups
                 {
                     $this->socialgroupsuserhandler->load_leaders($gid);
                 }
-                $plugins->run_hooks("socialgroups_constructor");
+                $plugins->run_hooks("class_socialgroups_constructor");
             }
         }
         if(is_numeric($gids))
@@ -139,7 +139,7 @@ class socialgroups
             {
                 $this->socialgroupsuserhandler->load_leaders($gids);
             }
-            $plugins->run_hooks("socialgroups_constructor");
+            $plugins->run_hooks("class_socialgroups_constructor");
         }
     }
 
@@ -150,8 +150,10 @@ class socialgroups
 
     public function error(string $string)
     {
-        global $lang;
+        global $lang, $plugins;
         $variable = "socialgroups_" . $string;
+        // Run after the variable name is set in case a developer wants to use it.
+        $plugins->run_hooks("class_socialgroups_error");
         if(isset($lang->$variable))
         {
             error($lang->$variable);
@@ -226,7 +228,8 @@ class socialgroups
         {
             $link = $mybb->settings['bburl'] . "/groups.php?cid=$cid";
         }
-        return "<a href='" . $link . "' class='group_category_link'>" . $name . "</a>";
+        // Add in the id of the group as a class so theme developers can work with it.
+        return "<a href='" . $link . "' class='group_category_link group_category" . $cid . "'>" . $name . "</a>";
     }
 
     /**
@@ -297,7 +300,7 @@ class socialgroups
                     break;
                 default:
                     // This way others can take advantage of the SEO Engine
-                    return $plugins->run_hooks("socialgroups_breadcrumb_link");
+                    return $plugins->run_hooks("class_socialgroups_breadcrumb_link");
             }
         }
         else
@@ -314,7 +317,7 @@ class socialgroups
                     return "groupthread.php?tid=" . $id;
                     break;
                 default:
-                    return $plugins->run_hooks("socialgroups_breadcrumb_link");
+                    return $plugins->run_hooks("class_socialgroups_breadcrumb_link");
             }
         }
     }
@@ -344,8 +347,8 @@ class socialgroups
                     $groups[$gid]['name'] = htmlspecialchars_uni($groups[$gid]['name']);
                     $groups[$gid]['description'] = htmlspecialchars_uni($groups[$gid]['description']);
                     $groups[$gid]['logo'] = htmlspecialchars_uni($groups[$gid]['logo']);
+                    $groups[$gid] = $plugins->run_hooks("class_socialgroups_load_group", $groups[$gid]);
                     $this->group[$gid] = $groups[$gid];
-                    $plugins->run_hooks("class_socialgroups_load_group", $groups);
                     return $groups[$gid];
                 }
                 else
@@ -365,6 +368,7 @@ class socialgroups
                 $groups[$gid]['name'] = htmlspecialchars_uni($groups[$gid]['name']);
                 $groups[$gid]['description'] = htmlspecialchars_uni($groups[$gid]['description']);
                 $groups[$gid]['logo'] = htmlspecialchars_uni($groups[$gid]['logo']);
+                $groups[$gid] = $plugins->run_hooks("class_socialgroups_load_group", $groups[$gid]);
                 $this->group[$gid] = $groups[$gid];
                 return $groups[$gid];
             }
@@ -379,7 +383,7 @@ class socialgroups
             $group['description'] = htmlspecialchars_uni($group['description']);
             $group['logo'] = htmlspecialchars_uni($group['logo']);
             // Add a hook so other devs can use it to load conveniently
-            $plugins->run_hooks("class_socialgroups_load_group", $group);
+            $group = $plugins->run_hooks("class_socialgroups_load_group_no_cache", $group);
             $this->group[$gid] = $group;
             return $this->group[$gid];
         }
@@ -455,7 +459,7 @@ class socialgroups
 
     public function load_permissions(int $gid=1): array
     {
-        global $db;
+        global $db, $plugins;
         if(isset($this->permissions[$gid]))
         {
             return $this->permissions[$gid];
@@ -466,12 +470,13 @@ class socialgroups
             $query = $db->simple_select("socialgroup_member_permissions", "*", "gid=$gid");
             if(!$db->num_rows($query))
             {
-                $this->permissions[$gid] = array("postthread"=> 1, "postreplies"=> 1, "inviteusers" => 1, "deleteposts" => 0);
+                $this->permissions[$gid] = array("postthreads"=> 1, "postreplies"=> 1, "inviteusers" => 1, "deleteposts" => 0);
             }
             else
             {
                 $this->permissions[$gid] = $db->fetch_array($query);
             }
+            $this->permissions[$gid] = $plugins->run_hooks("class_socialgroups_load_permissions", $this->permissions[$gid]);
             return $this->permissions[$gid];
         }
     }
@@ -548,7 +553,7 @@ class socialgroups
      */
     public function list_groups(string $cid="", string $sortfield="", string $keywords="", int $perpage=50, int $currentpage=0): array
     {
-        global $db, $mybb, $lang;
+        global $db, $mybb, $lang, $plugins;
         $cidonly = "";
         if($cid)
         {
@@ -645,6 +650,7 @@ class socialgroups
                 "avatardimensions" => $group['avatardimensions'],
                 "logo" => htmlspecialchars_uni($group['logo'])
             );
+            $this->group_list[$group['cid']][$group['gid']] = $plugins->run_hooks("class_socialgroups_list_groups", $this->group_list[$group['cid']][$group['gid']]);
         }
         $db->free_result($query);
         return $this->group_list;
@@ -656,7 +662,7 @@ class socialgroups
      */
     public function render_groups(): string
     {
-        global $mybb, $templates, $lang, $theme;
+        global $mybb, $templates, $lang, $theme, $plugins;
         if(count($this->group_list) < 1) // Provide a fallback to those who do it wrong.
         {
             $this->list_groups();
@@ -682,6 +688,7 @@ class socialgroups
                         eval("\$group_logo =\"" . $templates->get("socialgroups_logo") . "\";");
                     }
                     $subkey['group_link'] = $this->grouplink($subkey['gid'], $subkey['name']);
+                    $subkey = $plugins->run_hooks("class_socialgroups_render_group", $subkey);
                     eval("\$html .=\"" . $templates->get("socialgroups_group") . "\";");
                     $group_logo = "";
                     $subkey['group_link'] = "";
@@ -701,7 +708,7 @@ class socialgroups
 
     public function get_viewable_categories(): array
     {
-        global $db, $mybb, $cache;
+        global $db, $mybb, $cache, $plugins;
         if(count(array_keys($this->viewable_categories)) >= 1)
         {
             return $this->viewable_categories;
@@ -724,6 +731,7 @@ class socialgroups
             $this->viewable_categories = array();
             while ($category = $db->fetch_array($query))
             {
+                $category = $plugins->run_hooks("class_socialgroups_get_viewable_categories", $category);
                 $this->viewable_categories[$category['cid']] = htmlspecialchars_uni($category['name']);
             }
             $db->free_result($query);
@@ -765,5 +773,11 @@ class socialgroups
         }
         $db->free_result($query);
         $cache->update("socialgroups_categories", $data);
+    }
+
+    public function __destruct()
+    {
+        global $plugins;
+        $plugins->run_hooks("class_socialgroups_destructor");
     }
 }
