@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin
  * This file handles all database changes.
  */
 
@@ -11,7 +10,7 @@ if(!defined("IN_MYBB"))
 }
 function socialgroups_create_tables()
 {
-    global $db, $cache;
+    global $db, $cache, $mybb;
     $charset = $db->build_create_table_collation();
 
     $db->query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "socialgroups (
@@ -135,6 +134,33 @@ function socialgroups_create_tables()
     dateline BIGINT NOT NULL DEFAULT 0,
     approved INT NOT NULL DEFAULT 0
     ) ENGINE = Innodb $charset");
+
+    // Create a category
+    $new_category = array(
+        "disporder" => 1,
+        "name" => "General Category",
+        "groups" => 0,
+        "staffonly" => 0,
+        "inviteonly" => 0,
+        "jointype" => 0,
+        "uid" => (int) $mybb->user['uid']
+    );
+
+    $cid = $db->insert_query("socialgroup_categories", $new_category);
+
+    // Now create a group.
+    $new_group = array(
+        "cid" => $cid,
+        "name" => "General Group",
+        "approved" => 1,
+        "description" => "This is a general group.",
+        "logo" => "",
+        "private" => 0,
+        "staffonly" => 0,
+        "locked" => 0
+    );
+
+    $db->insert_query("socialgroups", $new_group);
 
     // Usergroup permissions
     $db->write_query("ALTER TABLE " . TABLE_PREFIX . "usergroups ADD maxsocialgroups_create INT UNSIGNED DEFAULT 5, ADD cancreatesocialgroups INT UNSIGNED DEFAULT 1, ADD socialgroups_auto_approve INT UNSIGNED DEFAULT 0");
