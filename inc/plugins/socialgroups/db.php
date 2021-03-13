@@ -294,13 +294,22 @@ function socialgroups_create_tables()
         "uid" => (int) $mybb->user['uid']
     );
 
-    $db->insert_query("socialgroups", $new_group);
+    $gid = $db->insert_query("socialgroups", $new_group);
 
     if(!is_object($socialgroups))
     {
         require_once "classes/socialgroups.php";
         $socialgroups = new socialgroups();
     }
+    $socialgroups->socialgroupsuserhandler->join($gid, $mybb->user['uid'], 1);
+
+    $new_leader = array(
+        "gid" => $gid,
+        "uid" => $mybb->user['uid']
+    );
+
+    $db->insert_query("socialgroup_leaders", $new_leader);
+
     $socialgroups->update_cache();
     $socialgroups->update_socialgroups_category_cache();
 
