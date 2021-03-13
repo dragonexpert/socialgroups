@@ -1,6 +1,7 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
+ * This is not a free plugin
  * This file handles all database changes.
  */
 
@@ -141,9 +142,6 @@ function socialgroups_create_tables()
         "name" => "General Category",
         "groups" => 0,
         "staffonly" => 0,
-        "inviteonly" => 0,
-        "jointype" => 0,
-        "uid" => (int) $mybb->user['uid']
     );
 
     $cid = $db->insert_query("socialgroup_categories", $new_category);
@@ -157,7 +155,8 @@ function socialgroups_create_tables()
         "logo" => "",
         "private" => 0,
         "staffonly" => 0,
-        "locked" => 0
+        "locked" => 0,
+        "uid" => (int) $mybb->user['uid']
     );
 
     $db->insert_query("socialgroups", $new_group);
