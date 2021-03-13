@@ -457,9 +457,10 @@ class socialgroups
      * @return array An array of permissions.
      */
 
-    public function load_permissions(int $gid=1): array
+    public function load_permissions($gid=1): array
     {
         global $db, $plugins;
+        $gid = (int) $gid;
         if(isset($this->permissions[$gid]))
         {
             return $this->permissions[$gid];
