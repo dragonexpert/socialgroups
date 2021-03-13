@@ -162,7 +162,7 @@ function socialgroups_category_delete(int $cid=0)
             $query = $db->simple_select("socialgroups", "gid", "cid=$cid");
             while($group = $db->fetch_array($query))
             {
-                $socialgroups->delete_group($group['gid']);
+                $socialgroups->socialgroupsdatahandler->delete_group($group['gid']);
             }
             $db->delete_query("socialgroup_categories", "cid=" . $cid);
             $socialgroups->update_socialgroups_category_cache();
