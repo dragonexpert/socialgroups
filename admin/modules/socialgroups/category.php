@@ -178,7 +178,7 @@ function socialgroups_category_delete(int $cid=0)
             // This is an exception handler
             $form = new Form($baseurl . "&action=delete&cid=$cid", "post");
             $form_container = new FormContainer("Confirm");
-            $form_container->output_row("Delete " . htmlspecialchars_uni($category['name']) . "?", "This action cannot be undone.", $form->generate_yes_no_radio("confirm", 0), "confirm");
+            $form_container->output_row("Delete " . htmlspecialchars_uni($category['name']) . "?", "This action cannot be undone.  All groups in the category are deleted along with threads and posts.", $form->generate_yes_no_radio("confirm", 0), "confirm");
             $form_container->end();
             $form->output_submit_wrapper(array($form->generate_submit_button("Delete Category")));
             $form->end();
@@ -188,7 +188,7 @@ function socialgroups_category_delete(int $cid=0)
     {
         $form = new Form($baseurl . "&action=delete&cid=$cid", "post");
         $form_container = new FormContainer("Delete Category");
-        $form_container->output_row("Delete " . htmlspecialchars_uni($category['name']) . "?", "This action cannot be undone.", $form->generate_yes_no_radio("confirm", 0), "confirm");
+        $form_container->output_row("Delete " . htmlspecialchars_uni($category['name']) . "?", "This action cannot be undone. All groups in the category are deleted along with threads and posts.", $form->generate_yes_no_radio("confirm", 0), "confirm");
         $form_container->end();
         $form->output_submit_wrapper(array($form->generate_submit_button("Delete Category")));
         $form->end();
