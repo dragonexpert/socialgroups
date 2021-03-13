@@ -31,7 +31,7 @@ $sub_tabs['create'] = array(
 
 $table = new TABLE;
 
-switch($mybb->input['action'])
+switch($action)
 {
     case "browse":
         $page->output_nav_tabs($sub_tabs, "browse");
@@ -44,7 +44,7 @@ switch($mybb->input['action'])
             "description" => "Editing category."
         );
         $page->output_nav_tabs($sub_tabs, "edit");
-        socialgroups_category_edit($mybb->input['cid']);
+        socialgroups_category_edit($mybb->get_input("cid", MyBB::INPUT_INT));
         break;
     case "add":
         $page->output_nav_tabs($sub_tabs, "create");
@@ -57,7 +57,7 @@ switch($mybb->input['action'])
             "description" => "Delete category."
         );
         $page->output_nav_tabs($sub_tabs, "delete");
-        socialgroups_category_delete($mybb->input['cid']);
+        socialgroups_category_delete($mybb->get_input("cid", MyBB::INPUT_INT));
         break;
     case "merge":
         $sub_tabs['merge'] = array(
@@ -66,7 +66,7 @@ switch($mybb->input['action'])
             "description" => "Merge category."
         );
         $page->output_nav_tabs($sub_tabs, "merge");
-        socialgroups_category_merge($mybb->input['cid']);
+        socialgroups_category_merge($mybb->get_input("cid", MyBB::INPUT_INT));
         break;
     default:
         $plugins->run_hooks("admin_socialgroups_category_action");
@@ -201,7 +201,7 @@ function socialgroups_category_add()
         $new_category = array(
             "name" => $db->escape_string($mybb->get_input("name")),
             "disporder" => $mybb->get_input("disporder", MyBB::INPUT_INT),
-            "staffonly" => $mybb->get_input("staffonly", MyBB::INPOUT_INT)
+            "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT)
         );
         $plugins->run_hooks("admin_socialgroups_category_do_add");
         $cid = $db->insert_query("socialgroup_categories", $new_category);
