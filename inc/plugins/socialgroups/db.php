@@ -9,9 +9,144 @@ if(!defined("IN_MYBB"))
 {
     die("Direct access not allowed.");
 }
+
+// Table definition
+$tables = array();
+
+$tables['socialgroups'] = array(
+    "gid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "cid" => array(
+        "type" => "INT",
+        "autoinc" => false,
+        "default" => 1
+    ),
+    "name" => array(
+        "type" => "TEXT"
+    ),
+    "approved" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "description" => array(
+        "type" => "TEXT"
+    ),
+    "logo" => array(
+        "type" => "TEXT"
+    ),
+    "private" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "staffonly" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "inviteonly" => array(
+        "type" => "INT",
+        "default" => 0,
+    ),
+    "jointype" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "threads" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "posts" => array(
+        "type" => "INT",
+        "default" => 0,
+    ),
+    "locked" => array(
+        "type" => "INT",
+        "default" => 0
+    )
+);
+
+$tables['socialgroup_categories'] = array(
+    "cid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "disporder" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "name" => array(
+        "type" => "text",
+    ),
+    "groups" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "staffonly" => array(
+        "type" => "INT",
+        "default" => 0
+    )
+);
+
+$tables['socialgroup_members'] = array(
+    "mid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "dateline" => array(
+        "type" => "BIGINT",
+        "default" => 0
+    )
+);
+
+$tables['socialgroup_member_permissions'] = array(
+    "pid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true,
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "postthreads" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "postreplies" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "inviteusers" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "deleteposts" => array(
+        "type" => "INT",
+        "default" => 0
+    )
+);
+
+// Todo Finish the rest of the tables.
+
 function socialgroups_create_tables()
 {
-    global $db, $cache, $mybb;
+    global $db, $cache, $mybb, $socialgroups;
     $charset = $db->build_create_table_collation();
 
     $db->query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "socialgroups (
@@ -136,11 +271,11 @@ function socialgroups_create_tables()
     approved INT NOT NULL DEFAULT 0
     ) ENGINE = Innodb $charset");
 
-    // Create a category
+    // Create a category.  We are setting groups to 1 here because we are creating a group automatically.
     $new_category = array(
         "disporder" => 1,
         "name" => "General Category",
-        "groups" => 0,
+        "groups" => 1,
         "staffonly" => 0,
     );
 
@@ -160,6 +295,14 @@ function socialgroups_create_tables()
     );
 
     $db->insert_query("socialgroups", $new_group);
+
+    if(!is_object($socialgroups))
+    {
+        require_once "classes/socialgroups.php";
+        $socialgroups = new socialgroups();
+    }
+    $socialgroups->update_cache();
+    $socialgroups->update_socialgroups_category_cache();
 
     // Usergroup permissions
     $db->write_query("ALTER TABLE " . TABLE_PREFIX . "usergroups ADD maxsocialgroups_create INT UNSIGNED DEFAULT 5, ADD cancreatesocialgroups INT UNSIGNED DEFAULT 1, ADD socialgroups_auto_approve INT UNSIGNED DEFAULT 0");
@@ -185,7 +328,10 @@ function socialgroups_drop_tables()
     $columns = array("cancreatesocialgroups","maxsocialgroups_create","socialgroups_auto_approve");
     foreach($columns as $column)
     {
-        $db->write_query("ALTER TABLE " . TABLE_PREFIX . "usergroups DROP " . $column);
+        if($db->field_exists($column, "usergroups"))
+        {
+            $db->write_query("ALTER TABLE " . TABLE_PREFIX . "usergroups DROP " . $column);
+        }
     }
     $cache->update_usergroups();
 }
