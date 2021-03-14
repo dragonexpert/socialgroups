@@ -396,8 +396,10 @@ while($group = $db->fetch_array($groupquery))
     eval("\$grouplist .=\"".$templates->get("socialgroups_groupcp_group")."\";");
 }
 $db->free_result($groupquery);
+$colspan = 4;
 if($socialgroups->socialgroupsuserhandler->is_moderator(1, $mybb->user['uid']))
 {
+    ++$colspan;
     eval("\$groupcpmod =\"" . $templates->get("socialgroups_groupcp_modcolumn") . "\";");
 }
 eval("\$groupcppage =\"".$templates->get("socialgroups_groupcp_page")."\";");
