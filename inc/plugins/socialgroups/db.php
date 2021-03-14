@@ -21,7 +21,6 @@ $tables['socialgroups'] = array(
     ),
     "cid" => array(
         "type" => "INT",
-        "autoinc" => false,
         "default" => 1
     ),
     "name" => array(
@@ -82,7 +81,7 @@ $tables['socialgroup_categories'] = array(
         "default" => 1
     ),
     "name" => array(
-        "type" => "text",
+        "type" => "TEXT",
     ),
     "groups" => array(
         "type" => "INT",
@@ -142,12 +141,332 @@ $tables['socialgroup_member_permissions'] = array(
     )
 );
 
-// Todo Finish the rest of the tables.
+$tables['socialgroup_moderators'] = array(
+    "mid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    )
+);
+
+$tables['socialgroup_leaders'] = array(
+    "lid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    )
+);
+
+$tables['socialgroup_invites'] = array(
+    "id" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "touid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "fromuid" => array(
+        "type" => "INT",
+        "default" => 1
+    )
+);
+
+$tables['socialgroup_announcements'] = array(
+    "aid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "dateline" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "subject" => array(
+        "type" => "TEXT",
+    ),
+    "message" => array(
+        "type" => "TEXT"
+    ),
+    "active" => array(
+        "type" => "INT",
+        "default" => 1
+    )
+);
+
+$tables['socialgroup_threads'] = array(
+    "tid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "firstpost" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "subject" => array(
+        "type" => "TEXT"
+    ),
+    "dateline" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "sticky" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "visible" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "closed" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "replies" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "views" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lastposttime" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lastpostuid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lastpostusername" => array(
+        "type" => "TEXT"
+    )
+);
+
+$tables['socialgroup_posts'] = array(
+    "pid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "tid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "dateline" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lastedit" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lasteditby" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "editcount" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "reported" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "visible" => array(
+        "type" => "INT",
+        "default" => 1
+    ),
+    "ipaddress" => array(
+        "type" => "varbinary",
+        "length" => 16,
+        "default" => ""
+    ),
+    "message" => array(
+        "type" => "TEXT"
+    )
+);
+
+$tables['socialgroup_reported_posts'] = array(
+    "rid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "pid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "tid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "dateline" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "reason" => array(
+        "type" => "TEXT"
+    ),
+    "status" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "handledby" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "handledate" => array(
+        "type" => "INT",
+        "default" => 0
+    )
+);
+
+$tables['socialgroup_join_requests'] = array(
+    "rid" => array(
+        "type" => "INT",
+        "autoinc" => true,
+        "isprimarykey" => true
+    ),
+    "gid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "uid" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "dateline" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "approved" => array(
+        "type" => "INT",
+        "default" => 0
+    )
+);
+
+
+function socialgroups_generate_table_sql(string $table_name, $array=array())
+{
+    global $db, $config;
+    $type = $default = $autoinc = $isprimarykey = $length = $null = $unsigned = $comma = "";
+    $sql = "CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . $table_name . " (";
+    if($config['database']['type'] == "mysqli")
+    {
+        foreach($array as $key => $value)
+        {
+            if($value['type'] == "INT")
+            {
+                $type = "INT";
+            }
+            if($value['type'] == "TEXT")
+            {
+                $type = "TEXT";
+            }
+            if($value['type'] == "VARCHAR")
+            {
+                $type = "VARCHAR";
+            }
+            if($value['type'] == "VARBINARY")
+            {
+                $type = "VARBINARY";
+            }
+            if(isset($value['length']))
+            {
+                $type .= "(" . $value['length'] . ")";
+            }
+            if(isset($value['unsigned']))
+            {
+                $unsigned = " UNSIGNED ";
+            }
+            if(isset($value['nullable']))
+            {
+                $null = " NULL ";
+            }
+            if(isset($value['default']))
+            {
+                $default = " DEFAULT " . $value['default'];
+            }
+            if(isset($value['autoinc']))
+            {
+                $autoinc = " AUTO_INCREMENT ";
+            }
+            if(isset($value['isprimarykey']))
+            {
+                $isprimarykey = " PRIMARY KEY ";
+            }
+            $sql .= $comma . $key . " " . $type . $unsigned . $autoinc . $isprimarykey;
+            $comma = ",\n";
+            $type = $unsigned = $autoinc = $isprimarykey = "";
+        }
+        // The loop is now ended.
+        $sql .= "\n) ENGINE = Innodb " . $db->build_create_table_collation();
+    }
+    if($config['database']['type'] == "sqlite")
+    {
+        // TODO Implement SQLite Considerations
+    }
+    if($config['database']['type'] == "pgsql")
+    {
+        // TODO Implement PGSQL Considerations
+    }
+    return $sql;
+}
+
 
 function socialgroups_create_tables()
 {
     global $db, $cache, $mybb, $socialgroups;
     $charset = $db->build_create_table_collation();
+
+    // TODO run the actual arrays through the function.
 
     $db->query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "socialgroups (
     gid INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
