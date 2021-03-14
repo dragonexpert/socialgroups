@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 
 define("IN_MYBB", 1);
@@ -231,7 +230,9 @@ $parser_options = array(
     "allow_html" => 0
 );
 // Handle announcements
-$colspan= 2;
+$colspan= 4;
+$announcementcolspan = 3;
+$threadauthorcolspan = 2;
 $announcements =  $announcementlist = $announcementmanage = "";
 foreach($socialgroups->announcements[$gid] as $announcement)
 {
@@ -239,16 +240,17 @@ foreach($socialgroups->announcements[$gid] as $announcement)
     $announcement['message'] = $parser->parse_message($announcement['message'], $parser_options);
     if($announcementmoderator == 1)
     {
+        $threadauthorcolspan = 3;
         if($announcement['gid'] != 0)
         {
-            $colspan = 4;
-            $announcementcolspan = 1;
+            $colspan = 5;
+            $announcementcolspan = 2;
             eval("\$announcementmanage =\"" . $templates->get("socialgroups_announcement_manage") . "\";");
         }
         else
         {
-            $colspan = 2;
-            $announcementcolspan = 3;
+            $colspan = 5;
+            $announcementcolspan = 4;
         }
     }
     $announcementavatar = "";
@@ -264,8 +266,10 @@ foreach($socialgroups->announcements[$gid] as $announcement)
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
 // Thread time
 $modcolumn = "";
+$colspan = 5;
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
+   // ++$colspan;
     eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
 }
 $page = 1;
@@ -305,9 +309,11 @@ if($mybb->get_input("direction"))
 $pagination = multipage($threadcount, 20, $page, "showgroup.php?gid=$gid". $sorturl . $directionurl);
 $threadlist = $socialgroups->socialgroupsthreadhandler->load_threads($gid, $page, 20, array("field" => $mybb->get_input("sort"), "direction" => $mybb->get_input("direction")));
 $colspan = 4;
+$threadcolspan = 1;
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     ++$colspan;
+    $threadcolspan = 2;
 }
 $threads = "";
 if(!is_array($threadlist))
