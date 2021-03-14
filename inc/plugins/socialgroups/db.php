@@ -320,9 +320,9 @@ $tables['socialgroup_posts'] = array(
         "default" => 1
     ),
     "ipaddress" => array(
-        "type" => "varbinary",
+        "type" => "VARBINARY",
         "length" => 16,
-        "default" => ""
+        "default" => "''"
     ),
     "message" => array(
         "type" => "TEXT"
@@ -397,7 +397,7 @@ function socialgroups_generate_table_sql(string $table_name, $array=array())
 {
     global $db, $config;
     $type = $default = $autoinc = $isprimarykey = $length = $null = $unsigned = $comma = "";
-    $sql = "CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . $table_name . " (";
+    $sql = "CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . $table_name . " (\n";
     if($config['database']['type'] == "mysqli")
     {
         foreach($array as $key => $value)
@@ -430,6 +430,10 @@ function socialgroups_generate_table_sql(string $table_name, $array=array())
             {
                 $null = " NULL ";
             }
+            else
+            {
+                $null = " NOT NULL ";
+            }
             if(isset($value['default']))
             {
                 $default = " DEFAULT " . $value['default'];
@@ -440,23 +444,121 @@ function socialgroups_generate_table_sql(string $table_name, $array=array())
             }
             if(isset($value['isprimarykey']))
             {
+                $null = $default = "";
                 $isprimarykey = " PRIMARY KEY ";
             }
-            $sql .= $comma . $key . " " . $type . $unsigned . $autoinc . $isprimarykey;
+            $sql .= $comma . $key . " " . $type . $unsigned . $null . $default . $autoinc . $isprimarykey;
+            $comma = ",\n";
+            $type = $unsigned = $autoinc = $isprimarykey = $null = $default = "";
+        }
+        // The loop is now ended.
+        $sql .= "\n) ENGINE = Innodb " . $db->build_create_table_collation();
+    } // Ends MySQLi Database Type
+    if($config['database']['type'] == "sqlite")
+    {
+        foreach($array as $key => $value)
+        {
+            if($value['type'] == "INT")
+            {
+                $type = "INT";
+            }
+            if($value['type'] == "TEXT")
+            {
+                $type = "TEXT";
+            }
+            if($value['type'] == "VARCHAR")
+            {
+                $type = "VARCHAR";
+            }
+            if($value['type'] == "VARBINARY")
+            {
+                $type = "BLOB";
+            }
+            if(isset($value['length']))
+            {
+                $type .= "(" . $value['length'] . ")";
+            }
+            if(isset($value['nullable']))
+            {
+                $null = " NULL ";
+            }
+            else
+            {
+                $null = " NOT NULL ";
+            }
+            if(isset($value['default']))
+            {
+                $default = " DEFAULT " . $value['default'];
+            }
+            if(isset($value['isprimarykey']))
+            {
+                $type = "INTEGER";
+                $isprimarykey = " PRIMARY KEY ";
+                $null = $default= "";
+            }
+            $sql .= $comma . $key . " " . $type . $null . $default . $isprimarykey;
             $comma = ",\n";
             $type = $unsigned = $autoinc = $isprimarykey = "";
         }
         // The loop is now ended.
-        $sql .= "\n) ENGINE = Innodb " . $db->build_create_table_collation();
-    }
-    if($config['database']['type'] == "sqlite")
-    {
-        // TODO Implement SQLite Considerations
-    }
+        $sql .= "\n) " . $db->build_create_table_collation() . ";";
+    } // Ends SQLite Database Type
     if($config['database']['type'] == "pgsql")
     {
-        // TODO Implement PGSQL Considerations
-    }
+        foreach ($array as $key => $value)
+        {
+            if ($value['type'] == "INT")
+            {
+                $type = "INT";
+            }
+            if ($value['type'] == "TEXT")
+            {
+                $type = "TEXT";
+            }
+            if ($value['type'] == "VARCHAR")
+            {
+                $type = "VARCHAR";
+            }
+            if ($value['type'] == "VARBINARY")
+            {
+                $type = "BYTEA";
+            }
+            if (isset($value['length']))
+            {
+                if ($type != "BYTEA")
+                {
+                    $type .= "(" . $value['length'] . ")";
+                }
+            }
+            if (isset($value['nullable']))
+            {
+                $null = " NULL ";
+            }
+            else
+            {
+                $null = " NOT NULL ";
+            }
+            if (isset($value['default']))
+            {
+                $default = " DEFAULT " . $value['default'];
+            }
+            if (isset($value['isprimarykey']))
+            {
+                $null = $default = "";
+                $type = "SERIAL";
+                $isprimarykey = "PRIMARY KEY (" . $key . ")";
+            }
+            $sql .= $comma . $key . " " . $type . $null . $default;
+            $comma = ",\n";
+            $type = $null = $default = "";
+        }
+        // The loop is now ended.
+        if ($isprimarykey != "")
+        {
+            $sql .= $comma . $isprimarykey;
+        }
+        $sql .= "\n) " . $db->build_create_table_collation() . ";";
+    } // Ends PGSQL Database Type
     return $sql;
 }
 
