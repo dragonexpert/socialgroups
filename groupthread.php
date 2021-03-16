@@ -6,7 +6,7 @@ $templatelist.= ",socialgroups_thread_tools,socialgroups_replybox,socialgroups_r
 $templatelist .= ",postbit_userstar, postbit_online, postbit_avatar, postbit_find, postbit_pm, postbit_author_user, postbit_edit, postbit_quickdelete";
 $templatelist .= ",postbit_quickrestore, postbit_posturl, postbit_report, postbit_iplogged_hiden, newpoints_postbit, postbit_classic";
 $templatelist .= ",socialgroups_postbit_report,socialgroups_postbit_delete,showthread_newreply_closed,showthread_classic_header,socialgroups_logo";
-$templatelist .= ",socialgroups_groupjump_group,socialgroups_groupjump";
+$templatelist .= ",socialgroups_groupjump_group,socialgroups_groupjump,postbit_groupimage, postbit_editreason, postbit_inlinecheck, postbit";
 require_once "global.php";
 require_once "inc/functions_post.php";
 require_once "inc/class_parser.php";
