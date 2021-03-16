@@ -273,13 +273,16 @@ class socialgroupsthreadhandler
         $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
         $thread = $db->fetch_array($query);
         $plugins->run_hooks("class_socialgroupsthreadhandler_delete_thread");
-        if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid'] && $permanent == 1))
+        if($permanent == 1)
         {
-            $db->delete_query("socialgroup_threads", "tid=$tid");
-            $db->delete_query("socialgroup_posts", "tid=$tid");
-            $action = $lang->delete_thread;
+            if ($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+            {
+                $db->delete_query("socialgroup_threads", "tid=$tid");
+                $db->delete_query("socialgroup_posts", "tid=$tid");
+                $action = $lang->delete_thread;
+            }
         }
-        else if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']) && $permanent != 1)
+        else if(($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid'])) && $permanent != 1)
         {
             $db->update_query("socialgroup_threads", array("visible" => -1), "tid=$tid");
             $action = $lang->soft_delete_thread;
