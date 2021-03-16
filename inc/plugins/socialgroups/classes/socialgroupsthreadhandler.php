@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 if(!defined("IN_MYBB"))
 {
@@ -47,7 +46,7 @@ class socialgroupsthreadhandler
             "sticky" => (int) $data['sticky'],
             "visible" => 1,
             "closed" => (int) $data['closed'],
-            "replies" => 0,
+            "replies" => 1,
             "views" => 0,
             "lastposttime" => TIME_NOW,
             "lastpostuid" => (int) $data['uid'],
@@ -86,6 +85,7 @@ class socialgroupsthreadhandler
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_threads SET firstpost=$pid WHERE tid=$tid");
         $this->recount_threads($new_post['gid']);
         $this->recount_posts($new_post['gid']);
+        $socialgroups->update_cache();
         $message = "The thread has been posted.";
         redirect("groupthread.php?tid=$tid", $message);
     }
@@ -239,6 +239,7 @@ class socialgroupsthreadhandler
                 $db->update_query("socialgroup_posts", array("visible" => -1), "pid=$pid");
             }
             $this->recount_posts($gid, $thread['tid']);
+            $socialgroups->update_cache();
 
             // We use conid instead of tid because otherwise the mod log will try and fetch a thread.
             $data = array(
@@ -289,7 +290,7 @@ class socialgroupsthreadhandler
         }
         $this->recount_posts($gid);
         $this->recount_threads($gid);
-
+        $socialgroups->update_cache();
         $data = array(
             "gid" => $thread['gid'],
             "conid" => $thread['tid'],
