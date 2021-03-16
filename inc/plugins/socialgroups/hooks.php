@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin is created by Mark Janssen.
- * This is not a free plugin.
  * This page should be used for handling all hooks.
  */
 if(!defined("IN_MYBB"))
@@ -20,6 +19,7 @@ $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
 $plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
 $plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
+$plugins->add_hook("misc_start", "socialgroups_misc_start");
 
 function socialgroups_admin_load()
 {
@@ -185,6 +185,14 @@ function socialgroups_fetch_wol_activity_end($user_activity)
         $user_activity['activity'] = "groupthread";
         $user_activity['tid'] = $parameters['tid'];
     }
+    if(stripos($user_activity['location'], "groupcp.php"))
+    {
+        $user_activity['activity'] = "groupcp";
+    }
+    if(stripos($user_activity['location'] == "editgroup.php"))
+    {
+        $user_activity['activity'] = "editgroup";
+    }
     return $user_activity;
 }
 
@@ -221,6 +229,18 @@ function socialgroups_build_friendly_wol_location_end($array)
         $tid = $array['user_activity']['tid'];
         $link = $socialgroups->groupthreadlink($tid, $groupthreads[$tid]['subject']);
         $array['location_name'] = "Viewing Thread: " . $link;
+    }
+    if($array['user_activity']['activity'] == "groupcp")
+    {
+        if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+        {
+            $link = $mybb->settings['bburl'] . "/groupcp.php";
+        }
+        $array['location_name'] = "Group CP";
+    }
+    if($array['user_activity']['activity'] == "editgroup")
+    {
+        $array['location_name'] = "Editing Group";
     }
     return $array;
 }

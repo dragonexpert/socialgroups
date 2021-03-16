@@ -10,7 +10,7 @@ $templatelist .= ",socialgroups_mod_column,socialgroups_inline_checkbox,socialgr
 $templatelist .= ",socialgroups_new_thread,socialgroups_new_thread_link,codebuttons, smilieinsert_getmore, smilieinsert_smilie, smilieinsert,forumdisplay_sticky_sep";
 $templatelist .= ",forumdisplay_threads_sep,socialgroups_no_threads,socialgroups_edit_group_link,socialgroups_announcement_manage,socialgroups_add_announcement_link";
 $templatelist .= ",socialgroups_manage_link,socialgroups_logo,socialgroups_groupjump,socialgroups_groupjump_group";
-$templatelist .= ",forumdisplay_usersbrowsing_user,socialgroups_avatar";
+$templatelist .= ",forumdisplay_usersbrowsing_user,socialgroups_avatar,socialgroups_replybox_mod";
 require_once "global.php";
 require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -99,6 +99,11 @@ if($action == "newthread")
         add_breadcrumb($lang->socialgroups_post_new_thread, "showgroup.php?gid=$gid&action=newthread");
         $codebuttons = build_mycode_inserter();
         $smileys = build_clickable_smilies();
+        if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
+        {
+            $stickycheck = $closedchecked = "";
+            eval("\$newthread_modoptions = \"".$templates->get("socialgroups_replybox_mod")."\";");
+        }
         eval("\$newthreadform =\"".$templates->get("socialgroups_new_thread")."\";");
         output_page($newthreadform);
         exit;
@@ -106,7 +111,7 @@ if($action == "newthread")
 }
 if($action && $mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
 {
-    $allowedaction = array("lock", "unlock", "unapprove", "approve", "sticky", "unsticky");
+    $allowedaction = array("lock", "unlock", "unapprove", "approve", "sticky", "unsticky", "softdelete", "permdelete");
     $plugins->run_hooks("showgroup_inline_moderation");
     if(!in_array($action, $allowedaction))
     {
@@ -160,6 +165,22 @@ if($action && $mybb->request_method == "post" && verify_post_check($mybb->input[
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_threads SET sticky=0 WHERE tid IN($tidlist)");
         $message = $lang->socialgroups_threads_unstuck;
         $modaction = "Unstuck Threads";
+    }
+    if($action == "softdelete")
+    {
+        $selection = explode(",", $tidlist);
+        foreach ($selection as $tid)
+        {
+            $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 0);
+        }
+    }
+    if($action == "permdelete")
+    {
+        $selection = explode(",", $tidlist);
+        foreach ($selection as $tid)
+        {
+            $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 1);
+        }
     }
     $data = array(
         "gid" => $gid,
