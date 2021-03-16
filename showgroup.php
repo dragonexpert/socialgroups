@@ -234,23 +234,30 @@ $colspan= 4;
 $announcementcolspan = 3;
 $threadauthorcolspan = 2;
 $announcements =  $announcementlist = $announcementmanage = "";
+$modcolumn = "";
+$threadcolspan = 1;
+if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
+{
+    ++$threadcolspan;
+    eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
+}
 foreach($socialgroups->announcements[$gid] as $announcement)
 {
     $plugins->run_hooks("showgroup_announcement");
     $announcement['message'] = $parser->parse_message($announcement['message'], $parser_options);
     if($announcementmoderator == 1)
     {
-        $threadauthorcolspan = 3;
+        $threadauthorcolspan = 2;
         if($announcement['gid'] != 0)
         {
             $colspan = 5;
-            $announcementcolspan = 2;
+            $announcementcolspan = 1;
             eval("\$announcementmanage =\"" . $templates->get("socialgroups_announcement_manage") . "\";");
         }
         else
         {
-            $colspan = 5;
-            $announcementcolspan = 4;
+            $colspan = 4;
+            $announcementcolspan = 2;
         }
     }
     $announcementavatar = "";
@@ -265,13 +272,7 @@ foreach($socialgroups->announcements[$gid] as $announcement)
 }
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
 // Thread time
-$modcolumn = "";
 $colspan = 5;
-if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
-{
-   // ++$colspan;
-    eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
-}
 $page = 1;
 if($mybb->get_input("page"))
 {
@@ -313,7 +314,7 @@ $threadcolspan = 1;
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     ++$colspan;
-    $threadcolspan = 2;
+    //$threadcolspan = 2;
 }
 $threads = "";
 if(!is_array($threadlist))
@@ -419,6 +420,11 @@ if(isset($groupinfo['style']))
 else
 {
     $styleattribute = "";
+}
+$lockedwarning = "";
+if($groupinfo['locked'])
+{
+    $lockedwarning = $lang->socialgroups_group_locked_warning;
 }
 $plugins->run_hooks("showgroup_end");
 eval("\$showgrouppage =\"".$templates->get("socialgroups_showgroup_page")."\";");
