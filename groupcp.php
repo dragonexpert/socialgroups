@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroup plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 define("IN_MYBB", 1);
 $templatelist = "socialgroups_group_cp,socialgroups_join_request_request,socialgroups_join_request_page,socialgroups_join_request_no_requests";
@@ -243,7 +242,8 @@ if($mybb->get_input("gid"))
         $update_group = array(
             "locked" => 1
         );
-        $db->update_query("socialgroups", $update_group, "gid=" . $gid);
+        // Use the datahandler so caches get updated.
+        $socialgroups->socialgroupsdatahandler->save_group($update_group, "update", "gid=" . $gid);
         // Log the action
         $data = array(
             "gid" => $gid,
@@ -257,7 +257,7 @@ if($mybb->get_input("gid"))
         // Send a message to the group owner so they know it has been locked.
         $pm = array(
             "subject" => "Group Locked",
-            "message" => "The group " . $db->escape_string($groupinfo['name']) . " has been locked.",
+            "message" => "The group [url=" . $mybb->settings['bburl'] ."/showgroup.php?gid=" . $gid . "]" . $db->escape_string($groupinfo['name']) . "[/url] has been locked.",
             "touid" => $groupinfo['uid']
         );
         send_pm($pm, $uid, true);
@@ -269,7 +269,8 @@ if($mybb->get_input("gid"))
         $update_group = array(
             "locked" => 0
         );
-        $db->update_query("socialgroups", $update_group, "gid=" . $gid);
+        // Use the datahandler so caches get updated.
+        $socialgroups->socialgroupsdatahandler->save_group($update_group, "update", "gid=" . $gid);
         // Log the action
         $data = array(
             "gid" => $gid,
@@ -282,8 +283,8 @@ if($mybb->get_input("gid"))
 
         // Send a message to the group owner so they know it has been locked.
         $pm = array(
-            "subject" => "Group Locked",
-            "message" => "The group " . $db->escape_string($groupinfo['name']) . " has been unlocked.",
+            "subject" => "Group Unlocked",
+            "message" => "The group [url=" . $mybb->settings['bburl'] ."/showgroup.php?gid=" . $gid . "]" . $db->escape_string($groupinfo['name']) . "[/url] has been unlocked.",
             "touid" => $groupinfo['uid']
         );
         send_pm($pm, $uid, true);
