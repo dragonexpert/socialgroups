@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin
  * This file handles all database changes.
  */
 
@@ -601,7 +600,7 @@ function socialgroups_create_tables()
         $socialgroups = new socialgroups();
     }
 
-    $socialgroups->socialgroupsdatahandler->save($new_group, "insert");
+    $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
 
     // Usergroup permissions
     $db->add_column("usergroups", "maxsocialgroups_create", "INT NOT NULL DEFAULT 5");
