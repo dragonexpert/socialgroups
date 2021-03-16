@@ -111,7 +111,7 @@ if($action == "newthread")
 }
 if($action && $mybb->request_method == "post" && verify_post_check($mybb->input['my_post_key']))
 {
-    $allowedaction = array("lock", "unlock", "unapprove", "approve", "sticky", "unsticky");
+    $allowedaction = array("lock", "unlock", "unapprove", "approve", "sticky", "unsticky", "softdelete", "permdelete");
     $plugins->run_hooks("showgroup_inline_moderation");
     if(!in_array($action, $allowedaction))
     {
@@ -165,6 +165,22 @@ if($action && $mybb->request_method == "post" && verify_post_check($mybb->input[
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_threads SET sticky=0 WHERE tid IN($tidlist)");
         $message = $lang->socialgroups_threads_unstuck;
         $modaction = "Unstuck Threads";
+    }
+    if($action == "softdelete")
+    {
+        $selection = explode(",", $tidlist);
+        foreach ($selection as $tid)
+        {
+            $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 0);
+        }
+    }
+    if($action == "permdelete")
+    {
+        $selection = explode(",", $tidlist);
+        foreach ($selection as $tid)
+        {
+            $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 1);
+        }
     }
     $data = array(
         "gid" => $gid,
