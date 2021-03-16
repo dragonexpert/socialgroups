@@ -234,7 +234,7 @@ if($action == "deleteannouncement")
         {
             add_breadcrumb("Group CP", "groupcp.php");
         }
-        add_breadcrumb($lang->socialgroups_delete_announcement, "editgroup.php?action=deleteannouncement&amp;aid=$aid");
+        add_breadcrumb($lang->socialgroups_deleting_announcement, "editgroup.php?action=deleteannouncement&amp;aid=$aid");
         eval("\$announcementdelete =\"".$templates->get("socialgroups_announcement_delete_confirm")."\";");
         output_page($announcementdelete);
     }
