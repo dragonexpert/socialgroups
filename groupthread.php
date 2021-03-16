@@ -72,7 +72,7 @@ if($action == "reply" && $mybb->request_method== "post" && verify_post_check($my
     }
     $socialgroups->socialgroupsthreadhandler->new_post($mybb->input);
 }
-$verifyactions = array("deletepost", "lock", "unlock", "unapprove", "approve", "sticky", "unsticky");
+$verifyactions = array("deletepost", "lock", "unlock", "unapprove", "approve", "sticky", "unsticky", "softdelete", "permdelete");
 if(in_array($action, $verifyactions))
 {
     verify_post_check($mybb->get_input("my_post_key"));
@@ -119,6 +119,18 @@ if($action == "unsticky")
     $message = "The thread has been unstuck.";
     $modaction = "Unstuck Thread";
 }
+if($action == "softdelete")
+{
+    $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 0);
+    $message = "The thread has been deleted.";
+    $modaction = "Soft Deleted Thread";
+}
+if($action == "permdelete")
+{
+    $socialgroups->socialgroupsthreadhandler->delete_thread($tid, $gid, 1);
+    $message = "The thread has been deleted permanently.";
+    $modaction = "Permanently Deleted Thread";
+}
 if($mybb->get_input("my_post_key") && $action != "reply")
 {
     $data = array(
@@ -128,7 +140,14 @@ if($mybb->get_input("my_post_key") && $action != "reply")
         "action" => $modaction
     );
     log_moderator_action($data, $modaction);
-    redirect("groupthread.php?tid=$tid", $message);
+    if($action != "permdelete" && $action != "softdelete")
+    {
+        redirect("groupthread.php?tid=$tid", $message);
+    }
+    else
+    {
+        redirect("showgroup.php?gid=" . $gid, $message);
+    }
 }
 // Load our posts
 $visible = 1;
