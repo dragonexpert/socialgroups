@@ -10,7 +10,7 @@ $templatelist .= ",socialgroups_mod_column,socialgroups_inline_checkbox,socialgr
 $templatelist .= ",socialgroups_new_thread,socialgroups_new_thread_link,codebuttons, smilieinsert_getmore, smilieinsert_smilie, smilieinsert,forumdisplay_sticky_sep";
 $templatelist .= ",forumdisplay_threads_sep,socialgroups_no_threads,socialgroups_edit_group_link,socialgroups_announcement_manage,socialgroups_add_announcement_link";
 $templatelist .= ",socialgroups_manage_link,socialgroups_logo,socialgroups_groupjump,socialgroups_groupjump_group";
-$templatelist .= ",forumdisplay_usersbrowsing_user,socialgroups_avatar";
+$templatelist .= ",forumdisplay_usersbrowsing_user,socialgroups_avatar,socialgroups_replybox_mod";
 require_once "global.php";
 require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -99,6 +99,11 @@ if($action == "newthread")
         add_breadcrumb($lang->socialgroups_post_new_thread, "showgroup.php?gid=$gid&action=newthread");
         $codebuttons = build_mycode_inserter();
         $smileys = build_clickable_smilies();
+        if($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
+        {
+            $stickycheck = $closedchecked = "";
+            eval("\$newthread_modoptions = \"".$templates->get("socialgroups_replybox_mod")."\";");
+        }
         eval("\$newthreadform =\"".$templates->get("socialgroups_new_thread")."\";");
         output_page($newthreadform);
         exit;
