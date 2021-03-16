@@ -394,12 +394,13 @@ class socialgroupsuserhandler
      * This function adds a leader to a group.
      * @param int $gid The id of the group.
      * @param int $uid The id of the user.
+     * @param bool $admin_overide Allow an admin override.  Mainly for Admin CP.
      * @return false|int False on failure and the id of the leader on success.
      */
 
-    public function add_leader(int $gid=0, int $uid=0)
+    public function add_leader(int $gid=0, int $uid=0, bool $admin_overide = false)
     {
-        global $db, $mybb, $plugins;
+        global $db, $mybb, $plugins, $socialgroups;
         if(!$uid)
         {
             $uid = $mybb->user['uid'];
@@ -409,20 +410,29 @@ class socialgroupsuserhandler
         {
             return false;
         }
+        $groupinfo = $socialgroups->load_group($gid);
         $new_leader = array(
             "gid" =>  $gid,
             "uid" =>  $uid
         );
-        $lid = $db->insert_query("socialgroup_leaders", $new_leader);
-        $plugins->run_hooks("class_socialgroupsuserhandler_add_leader");
-        return $lid;
+        if(defined("IN_ADMINCP"))
+        {
+            $admin_overide = true;
+        }
+        if($admin_overide || $mybb->user['uid'] == $groupinfo['uid'])
+        {
+            $lid = $db->insert_query("socialgroup_leaders", $new_leader);
+            $plugins->run_hooks("class_socialgroupsuserhandler_add_leader");
+            return $lid;
+        }
+        return false;
     }
 
     /**
      * This removes a leader from a group.
      * @param int $gid The id of the group.
      * @param int $uid The id of the user.
-     * @param bool $admin_overide Allow an admin overide. Mainly for Admin CP.
+     * @param bool $admin_overide Allow an admin override. Mainly for Admin CP.
      * @return bool Whether the leader got deleted.
      */
 
@@ -431,12 +441,12 @@ class socialgroupsuserhandler
         global $db, $mybb, $socialgroups, $plugins;
         // First load the group.
         $groupinfo = $socialgroups->load_group($gid);
+        if(defined("IN_ADMINCP"))
+        {
+            $admin_overide = true;
+        }
         if($admin_overide)
         {
-            if(!$mybb->usergroup['cancp'])
-            {
-                error_no_permission();
-            }
             // Don't remove group owner.  Must use transfer ownership.
             if($uid == $groupinfo['uid'])
             {
