@@ -4,7 +4,7 @@
  * This is not a free plugin.
  */
 define("IN_MYBB", 1);
-define("THIS_SCRIPT", "editgrup.php");
+define("THIS_SCRIPT", "editgroup.php");
 $templatelist = "socialgroups_edit_group_page,socialgroups_staffonly,socialgroups_category_select,socialgroups_announcement_form,socialgroups_announcement_delete_confirm";
 $templatelist .= ",socialgroups_member_option,socialgroups_manage_leaders_page,socialgroups_transfer_group";
 require_once "global.php";
@@ -69,6 +69,10 @@ if($action == "editgroup")
         if (!$group['gid'])
         {
             error_no_permission();
+        }
+        if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+        {
+            add_breadcrumb("Group CP", "groupcp.php");
         }
         add_breadcrumb(htmlspecialchars($group['name']), "showgroup.php?gid=" . $group['gid']);
         add_breadcrumb($lang->sprintf($lang->socialgroups_editing_group, htmlspecialchars($group['name'])), "editgroup.php?action=editgroup&amp;gid=" . $group['gid']);
@@ -144,6 +148,10 @@ if($action == "addannouncement")
             "message" => $mybb->get_input("message")
         );
         add_breadcrumb($groupinfo['name'], "showgroup.php?gid=$gid");
+        if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+        {
+            add_breadcrumb("Group CP", "groupcp.php");
+        }
         add_breadcrumb($lang->socialgroups_adding_announcement, "editgroup.php?action=addannouncement");
         eval("\$addannouncementpage =\"".$templates->get("socialgroups_announcement_form")."\";");
         output_page($addannouncementpage);
@@ -178,6 +186,10 @@ if($action == "editannouncement")
             error_no_permission();
         }
         add_breadcrumb($groupinfo['name'], "showgroup.php?gid=$gid");
+        if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+        {
+            add_breadcrumb("Group CP", "groupcp.php");
+        }
         add_breadcrumb($lang->socialgroups_editing_announcement, "editgroup.php?action=editannouncement&amp;aid=$aid");
         $action = "editannouncement";
         eval("\$editannouncementpage =\"".$templates->get("socialgroups_announcement_form")."\";");
@@ -218,6 +230,10 @@ if($action == "deleteannouncement")
     {
         $groupinfo = $socialgroups->load_group($announcement['gid']);
         add_breadcrumb($groupinfo['name'], "showgroup.php?gid=" . $announcement['gid']);
+        if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+        {
+            add_breadcrumb("Group CP", "groupcp.php");
+        }
         add_breadcrumb($lang->socialgroups_delete_announcement, "editgroup.php?action=deleteannouncement&amp;aid=$aid");
         eval("\$announcementdelete =\"".$templates->get("socialgroups_announcement_delete_confirm")."\";");
         output_page($announcementdelete);
@@ -235,6 +251,10 @@ if($action == "manage_leaders")
         error_no_permission();
     }
     add_breadcrumb($groupinfo['name'], "showgroup.php?gid=" . $gid);
+    if($socialgroups->socialgroupsuserhandler->can_groupcp($mybb->user['uid']))
+    {
+        add_breadcrumb("Group CP", "groupcp.php");
+    }
     add_breadcrumb($lang->socialgroups_manage_leaders, "editgroup.php?action=manage_leaders&amp;gid=$gid");
     $members = $socialgroups->socialgroupsuserhandler->load_members($gid);
     $query = $db->simple_select("users", "uid,username", "uid IN(" . implode(",", $members) . ")", array("order_by" => "username"));
