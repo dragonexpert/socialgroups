@@ -25,7 +25,7 @@ class socialgroupsdatahandler
 
     public function save_group(array $data, string $method="update", string $where="")
     {
-        global $mybb, $db, $plugins, $lang, $socialgroups, $socialgroupsuserhandler;
+        global $mybb, $db, $plugins, $lang, $socialgroups, $socialgroupsuserhandler, $cache;
         if($method != "insert" && $method != "update")
         {
             $socialgroups->error("invalid_method");
@@ -42,7 +42,8 @@ class socialgroupsdatahandler
             "inviteonly" => "int",
             "uid" => "int",
             "threads" => "int",
-            "posts" => "int"
+            "posts" => "int",
+            "locked" => "int"
         );
 
         // Let other plugins be able to hook into this.
