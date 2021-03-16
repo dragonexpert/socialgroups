@@ -19,7 +19,6 @@ $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
 $plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
 $plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
-$plugins->add_hook("misc_start", "socialgroups_misc_start");
 
 function socialgroups_admin_load()
 {
