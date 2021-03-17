@@ -66,6 +66,17 @@ $tables['socialgroups'] = array(
     "locked" => array(
         "type" => "INT",
         "default" => 0
+    ),
+    "style" => array(
+        "type" => "TEXT"
+    ),
+    "lastposttime" => array(
+        "type" => "INT",
+        "default" => 0
+    ),
+    "lastposttid" => array(
+        "type" => "INT",
+        "default" => 0
     )
 );
 

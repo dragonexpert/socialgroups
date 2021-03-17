@@ -85,6 +85,13 @@ class socialgroupsthreadhandler
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_threads SET firstpost=$pid WHERE tid=$tid");
         $this->recount_threads($new_post['gid']);
         $this->recount_posts($new_post['gid']);
+
+        // Now update the last post info.  We join the threads table so we don't need to store the last post uid.
+        $last_post_info = array(
+            "lastposttime" => $new_post['dateline'],
+            "lastposttid" => $new_post['tid']
+        );
+        $db->update_query("socialgroups", $last_post_info, "gid=" . $new_post['gid']);
         $socialgroups->update_cache();
         $message = "The thread has been posted.";
         redirect("groupthread.php?tid=$tid", $message);
@@ -97,42 +104,60 @@ class socialgroupsthreadhandler
     public function new_post($data=array())
     {
         global $mybb, $db, $socialgroups, $plugins;
-        if(!$data['gid'])
+        if(!isset($data['gid']))
         {
             $socialgroups->error("invalid_group");
         }
-        if(!$data['tid'])
+        if(!isset($data['tid']))
         {
             $socialgroups->error("invalid_thread");
         }
-        if(!$data['uid'])
+        if(!isset($data['uid']))
         {
             $data['uid'] = $mybb->user['uid'];
         }
-        if(!$data['message'])
+        if(!isset($data['message']))
         {
             $socialgroups->error("no_message");
+        }
+        if(!isset($data['visible']))
+        {
+            // Give an option for an unapproved post.
+            $data['visible'] = 1;
         }
         $new_post = array(
             "tid" => (int)$data['tid'],
             "uid" => (int) $data['uid'],
             "gid" => (int) $data['gid'],
             "dateline" => TIME_NOW,
-            "visible" => 1,
+            "visible" => (int) $data['visible'],
             "ipaddress" => get_ip(),
             "message" => $db->escape_string($data['message'])
         );
         $cutoff = TIME_NOW - 3600; /* 1 hour post merge */
         $plugins->run_hooks("class_socialgroupsthreadhandler_insert_post");
         // Flood check
-        $query = $db->simple_select("socialgroup_posts", "pid, editcount, uid, message, dateline", "tid=" . $new_post['tid'] . " ORDER BY dateline DESC LIMIT 1");
+        $query = $db->simple_select("socialgroup_posts", "pid, editcount, uid, tid, message, dateline", "tid=" . $new_post['tid'] . " ORDER BY dateline DESC LIMIT 1");
         $postinfo = $db->fetch_array($query);
-        if($postinfo['uid'] != $new_post['uid'] || $postinfo['dateline'] < $cutoff)
+        $updated_thread = array();
+        // Admins can always do a new post.
+        if($postinfo['uid'] != $new_post['uid'] || $postinfo['dateline'] < $cutoff || $mybb->usergroup['cancp'] == 1)
         {
-            $db->insert_query("socialgroup_posts", $new_post);
+            $pid = $db->insert_query("socialgroup_posts", $new_post);
+            $updated_thread['lastposttime'] = $new_post['dateline'];
+            $updated_thread['lastpostuid'] = $new_post['uid'];
+            if(isset($data['username']))
+            {
+                $updated_thread['lastpostusername'] = $db->escape_string($data['username']);
+            }
+            else
+            {
+                $updated_thread['lastpostusername'] = $db->escape_string($mybb->user['username']);
+            }
         }
         else
         {
+            $pid = $postinfo['pid'];
             $updated_post = array(
                 "message" => $postinfo['message'] . "[hr]" . $new_post['message'],
                 "lastedit" => TIME_NOW,
@@ -144,19 +169,23 @@ class socialgroupsthreadhandler
         if(array_key_exists("closed", $data))
         {
             $updated_thread['closed'] = (int) $data['closed'];
-            $updatethread = TRUE;
         }
         if(array_key_exists("sticky", $data))
         {
             $updated_thread['sticky'] = (int) $data['sticky'];
-            $updatethread = TRUE;
         }
-        if($updatethread)
-        {
-            $db->update_query("socialgroup_threads", $updated_thread, "tid=" . $data['tid']);
-        }
+
+        $db->update_query("socialgroup_threads", $updated_thread, "tid=" . $data['tid']);
         $this->recount_posts($new_post['gid'], $new_post['tid']);
         $this->recount_threads($new_post['gid']);
+
+        // Update the last post info
+        $last_post_info = array(
+            "lastposttime" => $new_post['dateline'],
+            "lastposttid" => $new_post['tid']
+        );
+        $db->update_query("socialgroups", $last_post_info, "gid=" . $new_post['gid']);
+        $socialgroups->update_cache();
         $message = "Your message has been posted.";
         redirect("groupthread.php?tid=" . $new_post['tid'], $message);
     }
@@ -239,6 +268,32 @@ class socialgroupsthreadhandler
                 $db->update_query("socialgroup_posts", array("visible" => -1), "pid=$pid");
             }
             $this->recount_posts($gid, $thread['tid']);
+
+            // We need to fetch the latest post from the database.
+            $query = $db->query("SELECT * FROM " . TABLE_PREFIX . "socialgroup_posts WHERE gid=" . $gid . " AND visible=1
+            ORDER BY dateline DESC LIMIT 1");
+            $lastpost = $db->fetch_array($query);
+            $db->free_result($query);
+            $last_post_info = array(
+                "lastposttime" => $lastpost['dateline'],
+                "lastposttid" => $lastpost['tid']
+            );
+            $db->update_query("socialgroups", $last_post_info, "gid=" . $gid);
+
+            $query = $db->query("SELECT p.*, t.tid, u.username FROM " . TABLE_PREFIX . "socialgroup_posts p
+            LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
+            WHERE p.tid=" . $thread['tid'] . " AND p.visible=1 AND t.visible=1"
+            . " ORDER BY p.dateline DESC
+            LIMIT 1");
+            $post = $db->fetch_array($query);
+            $db->free_result($query);
+            $thread_last_post_info = array(
+                "lastposttime" => $post['dateline'],
+                "lastpostuid" => $post['uid'],
+                "lastpostusername" =>$db->escape_string($post['username'])
+            );
+            $db->update_query("socialgroup_threads", $thread_last_post_info, "tid=" . $thread['tid']);
+
             $socialgroups->update_cache();
 
             // We use conid instead of tid because otherwise the mod log will try and fetch a thread.
@@ -293,6 +348,22 @@ class socialgroupsthreadhandler
         }
         $this->recount_posts($gid);
         $this->recount_threads($gid);
+
+        // Update last post info
+        $query = $db->query("SELECT p.*, t.tid FROM " . TABLE_PREFIX . "socialgroup_posts p
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
+        WHERE p.gid=" . $gid . " AND p.visible=1 AND t.visible=1
+        ORDER BY dateline DESC
+        LIMIT 1");
+        $lastpost = $db->fetch_array($query);
+        $db->free_result($query);
+
+        $last_post_info = array(
+            "lastposttime" => $lastpost['dateline'],
+            "lastposttid" => $lastpost['tid']
+        );
+        $db->update_query("socialgroups", $last_post_info, "gid=" . $gid);
+
         $socialgroups->update_cache();
         $data = array(
             "gid" => $thread['gid'],
@@ -312,11 +383,13 @@ class socialgroupsthreadhandler
     function recount_posts(int $gid=0, int $tid=0)
     {
         global $db;
-        $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroups
+        if($gid > 0)
+        {
+            $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroups
             SET posts=(SELECT COUNT(pid) FROM " . TABLE_PREFIX . "socialgroup_posts WHERE gid=$gid AND visible=1)
             WHERE gid=$gid");
-
-        if($tid)
+        }
+        if($tid > 0)
         {
             $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_threads
             SET replies=(SELECT COUNT(pid) FROM " . TABLE_PREFIX . "socialgroup_posts WHERE gid=$gid AND visible=1 AND tid=$tid)
@@ -505,7 +578,7 @@ class socialgroupsthreadhandler
             }
         }
         $start = $page * $perpage - $perpage;
-        $query = $db->query("SELECT p.*, u.*, u.username AS userusername, f.*, t.*, eu.username AS editusername
+        $query = $db->query("SELECT p.dateline as postdateline, p.*, u.*, u.username AS userusername, f.*, t.*, eu.username AS editusername
         FROM " . TABLE_PREFIX . "socialgroup_posts p
         LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
         LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
@@ -517,6 +590,7 @@ class socialgroupsthreadhandler
         while($post = $db->fetch_array($query))
         {
             $post = $plugins->run_hooks("class_socialgroupsthreadhandler_load_post", $post);
+            $post['dateline'] = $post['postdateline'];
             $socialgroups->posts[$tid][$post['pid']] = $post;
         } // End the post loop
         return $socialgroups->posts[$tid];
