@@ -1,10 +1,12 @@
 <?php
-/* This is a sample page that shows how to get the moderators and display them.
-* Normally you would evaluate templates, but for demonstration purposes echo is used.*/
+/* Socialgroups Plugin
+* Author: Mark Janssen
+*/
 define("IN_MYBB", 1);
 define("THIS_SCRIPT", "groups.php");
 $templatelist = "socialgroups_category,socialgroups_group,socialgroups_groups,socialgroups_category_split";
 $templatelist .= ",socialgroups_clear,socialgroups_create_group_button,socialgroups_logo,index_whosonline_memberbit,forumbit_moderators_group,forumbit_moderators_user";
+$templatelist .= ",socialgroups_group_lastpost,socialgroups_group_lastpost_never";
 require_once "global.php";
 $lang->load("socialgroups");
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
