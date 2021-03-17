@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 
 if(!defined("IN_MYBB"))
@@ -619,9 +618,10 @@ class socialgroups
             $categories = 0;
         }
 
-        $query = $db->query("SELECT s.*, c.name as categoryname, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions
+        $query = $db->query("SELECT s.*, c.name as categoryname, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions, t.lastpostusername, t.subject
             FROM " . TABLE_PREFIX . "socialgroups s
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_categories c ON(s.cid=c.cid)
+            LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(s.lastposttid=t.tid)
             LEFT JOIN " . TABLE_PREFIX . "users u ON(s.uid=u.uid)
             WHERE s.cid IN(" . $categories . ") " . $cidonly . $searchsql . "
             ORDER BY c.disporder ASC , $ordersql
@@ -636,6 +636,11 @@ class socialgroups
         }
         while($group = $db->fetch_array($query))
         {
+            $threadlink = "";
+            if($group['lastposttime'] != 0)
+            {
+                $threadlink = $this->groupthreadlink($group['lastposttid'], $group['subject']);
+            }
             $this->group_list[$group['cid']][$group['gid']] = array(
                 "gid" => $group['gid'],
                 "cid" => $group['cid'],
@@ -649,7 +654,12 @@ class socialgroups
                 "profilelink" => build_profile_link(format_name(htmlspecialchars_uni($group['username']), $group['usergroup'], $group['displaygroup']), $group['uid']),
                 "avatar" => htmlspecialchars_uni($group['avatar']),
                 "avatardimensions" => $group['avatardimensions'],
-                "logo" => htmlspecialchars_uni($group['logo'])
+                "logo" => htmlspecialchars_uni($group['logo']),
+                "lastposttime" => my_date("relative", $group['lastposttime']),
+                "lastpostuid" => $group['lastpostuid'],
+                "lastpostsubject" => htmlspecialchars_uni($group['subject']),
+                "lastpostusername" => htmlspecialchars_uni($group['lastpostusername']),
+                "lastpostthreadlink" => $threadlink
             );
             $this->group_list[$group['cid']][$group['gid']] = $plugins->run_hooks("class_socialgroups_list_groups", $this->group_list[$group['cid']][$group['gid']]);
         }
@@ -690,6 +700,14 @@ class socialgroups
                     }
                     $subkey['group_link'] = $this->grouplink($subkey['gid'], $subkey['name']);
                     $subkey = $plugins->run_hooks("class_socialgroups_render_group", $subkey);
+                    if($subkey['lastpostthreadlink'] != "")
+                    {
+                        eval("\$lastpostinfo = \"" . $templates->get("socialgroups_group_lastpost") . "\";");
+                    }
+                    else
+                    {
+                        eval("\$lastpostinfo = \"" . $templates->get("socialgroups_group_lastpost_never") . "\";");
+                    }
                     eval("\$html .=\"" . $templates->get("socialgroups_group") . "\";");
                     $group_logo = "";
                     $subkey['group_link'] = "";
@@ -756,6 +774,8 @@ class socialgroups
         }
         $db->free_result($query);
         $cache->update("socialgroups", $data);
+        // Now actually reload socialgroups.
+        $this->group = $data;
     }
 
 
@@ -774,6 +794,8 @@ class socialgroups
         }
         $db->free_result($query);
         $cache->update("socialgroups_categories", $data);
+        // Reload category information in case it is used in the middle of a script.
+        $this->category = $data;
     }
 
     public function __destruct()
