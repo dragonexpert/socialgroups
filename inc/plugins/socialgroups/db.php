@@ -613,6 +613,10 @@ function socialgroups_create_tables()
 
     $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
 
+    // User stats
+    $db->add_column("users", "socialgroups_posts", "INT NOT NULL DEFAULT 0");
+    $db->add_column("users", "socialgroups_threads", "INT NOT NULL DEFAULT 0");
+
     // Usergroup permissions
     $db->add_column("usergroups", "maxsocialgroups_create", "INT NOT NULL DEFAULT 5");
     $db->add_column("usergroups", "cancreatesocialgroups", "INT NOT NULL DEFAULT 1");
@@ -625,23 +629,30 @@ function socialgroups_create_tables()
 
 function socialgroups_drop_tables()
 {
-    global $db, $cache;
-    $tables = array("socialgroups", "socialgroup_categories", "socialgroup_members", "socialgroup_member_permissions", "socialgroup_leaders",
-        "socialgroup_moderators", "socialgroup_invites", "socialgroup_announcements", "socialgroup_threads", "socialgroup_posts");
-    foreach($tables as $table)
+    global $db, $cache, $tables;
+    // Delete the tables
+    foreach(array_keys($tables) as $table)
     {
         if($db->table_exists($table))
         {
             $db->drop_table($table);
         }
     }
-    // Now permissions
-    $columns = array("cancreatesocialgroups","maxsocialgroups_create","socialgroups_auto_approve");
-    foreach($columns as $column)
+    /* Now Columns
+    * Use the format $column => $table
+    */
+    $columns = array(
+        "cancreatesocialgroups" => "usergroups",
+        "maxsocialgroups_create" => "usergroups",
+        "socialgroups_auto_approve" => "usergroups",
+        "socialgroups_posts" => "users",
+        "socialgroups_threads" => "users"
+    );
+    foreach($columns as $column => $table)
     {
-        if($db->field_exists($column, "usergroups"))
+        if($db->field_exists($column, $table))
         {
-            $db->drop_column("usergroups", $column);
+            $db->drop_column($table, $column);
         }
     }
     $cache->update_usergroups();

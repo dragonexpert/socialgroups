@@ -93,6 +93,7 @@ class socialgroupsthreadhandler
         );
         $db->update_query("socialgroups", $last_post_info, "gid=" . $new_post['gid']);
         $socialgroups->update_cache();
+        $this->update_user_stats($new_post['uid'], true);
         $message = "The thread has been posted.";
         redirect("groupthread.php?tid=$tid", $message);
     }
@@ -186,6 +187,7 @@ class socialgroupsthreadhandler
         );
         $db->update_query("socialgroups", $last_post_info, "gid=" . $new_post['gid']);
         $socialgroups->update_cache();
+        $this->update_user_stats($new_post['uid'], true);
         $message = "Your message has been posted.";
         redirect("groupthread.php?tid=" . $new_post['tid'], $message);
     }
@@ -251,11 +253,12 @@ class socialgroupsthreadhandler
         if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->group[$gid]['uid'] == $mybb->user['uid'])
         {
             // Get the thread so we have mod log data.
-            $query = $db->query("SELECT p.*, t.*
+            $query = $db->query("SELECT p.uid as poster, p.*, t.*
             FROM " . TABLE_PREFIX . "socialgroup_posts
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
             WHERE p.pid=$pid");
             $thread = $db->fetch_array($query);
+
             $plugins->run_hooks("class_socialgroupsthreadhandler_delete_post");
             if($permanent == 1)
             {
@@ -293,8 +296,8 @@ class socialgroupsthreadhandler
                 "lastpostusername" =>$db->escape_string($post['username'])
             );
             $db->update_query("socialgroup_threads", $thread_last_post_info, "tid=" . $thread['tid']);
-
             $socialgroups->update_cache();
+            $this->update_user_stats($thread['poster'], true);
 
             // We use conid instead of tid because otherwise the mod log will try and fetch a thread.
             $data = array(
@@ -363,7 +366,12 @@ class socialgroupsthreadhandler
             "lastposttid" => $lastpost['tid']
         );
         $db->update_query("socialgroups", $last_post_info, "gid=" . $gid);
-
+        $userquery = $db->simple_select("socialgroup_threads", "DISTINCT uid", "tid=" . $tid);
+        while($poster = $db->fetch_array($userquery))
+        {
+            $this->update_user_stats($poster['uid'], true);
+        }
+        $db->free_result($userquery);
         $socialgroups->update_cache();
         $data = array(
             "gid" => $thread['gid'],
@@ -594,5 +602,28 @@ class socialgroupsthreadhandler
             $socialgroups->posts[$tid][$post['pid']] = $post;
         } // End the post loop
         return $socialgroups->posts[$tid];
+    }
+
+    /**
+     * This function updates a users socialgroup posts and thread counts.
+     * @param int $userid The id of the user.
+     * @param bool $update_post_count Whether to update post count as well.
+     */
+    public function update_user_stats(int $userid=0, bool $update_post_count=false)
+    {
+        global $db;
+        $query = $db->simple_select("socialgroup_threads", "COUNT(tid) AS threadcount", "uid=" . $userid . " AND visible=1");
+        $update_user = array(
+            "socialgroups_threads" => $db->fetch_field($query, "threadcount")
+        );
+        $db->free_result($query);
+        if($update_post_count === true)
+        {
+            $query = $db->query("SELECT COUNT(*) as postcount FROM " . TABLE_PREFIX . "socialgroup_posts p
+            LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
+            WHERE p.visible=1 AND t.visible=1 AND p.uid=" . $userid);
+            $update_user['socialgroups_posts'] = $db->fetch_field($query, "postcount");
+        }
+        $db->update_query("users", $update_user, "uid=" . $userid);
     }
 }
