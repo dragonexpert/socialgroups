@@ -1,4 +1,8 @@
 <?php
+/*
+ * Socialgroups Plugin
+ * AUthor: Mark Janssen
+ */
 define("IN_MYBB", 1);
 define("THIS_SCRIPT", "groupthread.php");
 $templatelist = "socialgroups_post_post,codebuttons, smilieinsert_getmore, smilieinsert_smilie, smilieinsert, socialgroups_groupthread_page";
@@ -37,6 +41,10 @@ if($groupinfo['private'] && !$socialgroups->socialgroupsuserhandler->is_member($
 if($groupinfo['staffonly'] && !$mybb->usergroup['canmodcp'])
 {
     error_no_permission();
+}
+if($groupinfo['locked'])
+{
+    $lockedwarning = $lang->socialgroups_group_locked_warning;
 }
 $grouplogo = "";
 if($groupinfo['logo'])
