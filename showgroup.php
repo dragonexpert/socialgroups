@@ -73,7 +73,7 @@ if($action == "leavegroup")
     $message = $lang->socialgroups_left_group;
     redirect("showgroup.php?gid=$gid", $message);
 }
-
+$announcementmoderator = 0;
 if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $uid))
 {
     eval("\$editgrouplink =\"".$templates->get("socialgroups_edit_group_link")."\";");
@@ -262,8 +262,10 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
     ++$threadcolspan;
     eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
 }
+$announcement_count = 0;
 foreach($socialgroups->announcements[$gid] as $announcement)
 {
+    ++$announcement_count;
     $plugins->run_hooks("showgroup_announcement");
     $announcement['message'] = $parser->parse_message($announcement['message'], $parser_options);
     if($announcementmoderator == 1)
@@ -277,7 +279,7 @@ foreach($socialgroups->announcements[$gid] as $announcement)
         }
         else
         {
-            $colspan = 4;
+            $colspan = 5;
             $announcementcolspan = 2;
         }
     }
@@ -290,6 +292,10 @@ foreach($socialgroups->announcements[$gid] as $announcement)
         eval("\$announcementavatar =\"".$templates->get("socialgroups_avatar")."\";");
     }
     eval("\$announcements .=\"".$templates->get("socialgroups_announcement_announcement")."\";");
+}
+if($announcement_count == 0 && $announcementmoderator)
+{
+    $colspan = 5;
 }
 eval("\$announcementlist =\"".$templates->get("socialgroups_announcements")."\";");
 // Thread time
