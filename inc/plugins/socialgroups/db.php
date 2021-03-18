@@ -10,6 +10,7 @@ if(!defined("IN_MYBB"))
 }
 
 // Table definition
+global $tables;
 $tables = array();
 
 $tables['socialgroups'] = array(
@@ -576,7 +577,7 @@ function socialgroups_generate_table_sql(string $table_name, $array=array())
 function socialgroups_create_tables()
 {
     global $db, $cache, $mybb, $socialgroups, $tables;
-    foreach($tables as $tablename => $definition)
+    foreach ($tables as $tablename => $definition)
     {
         $result = socialgroups_generate_table_sql($tablename, $definition);
         $db->query($result);
@@ -605,11 +606,12 @@ function socialgroups_create_tables()
         "uid" => (int) $mybb->user['uid']
     );
 
-    if(!is_object($socialgroups))
+    if (!is_object($socialgroups))
     {
         require_once "classes/socialgroups.php";
-        $socialgroups = new socialgroups();
+        $socialgroups = new socialgroups(0, false, false, false, false);
     }
+
 
     $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
 
@@ -631,11 +633,12 @@ function socialgroups_drop_tables()
 {
     global $db, $cache, $tables;
     // Delete the tables
-    foreach(array_keys($tables) as $table)
+    foreach($tables as $tablename => $definition)
     {
-        if($db->table_exists($table))
+
+        if($db->table_exists($tablename))
         {
-            $db->drop_table($table);
+            $db->drop_table($tablename);
         }
     }
     /* Now Columns

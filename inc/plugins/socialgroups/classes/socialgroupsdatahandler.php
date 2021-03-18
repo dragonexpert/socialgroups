@@ -90,6 +90,7 @@ class socialgroupsdatahandler
         {
             $db->update_query("socialgroups", $data, $where);
             $plugins->run_hooks("class_socialgroupsdatahandler_update_group");
+            $socialgroups->update_cache();
         }
         if($method == "insert")
         {
@@ -98,6 +99,7 @@ class socialgroupsdatahandler
                 $data['uid'] = $mybb->user['uid'];
             }
             $gid = $db->insert_query("socialgroups", $data);
+            $socialgroups->update_cache();
             $plugins->run_hooks("class_socialgroupsdatahandler_insert_group");
             $socialgroups->socialgroupsuserhandler->join($gid, $data['uid'], 1);
             $socialgroups->socialgroupsuserhandler->add_leader($gid, $data['uid']);
@@ -110,7 +112,6 @@ class socialgroupsdatahandler
             $db->update_query("socialgroup_categories", $update_category, "cid=" . $data['cid']);
             $socialgroups->update_socialgroups_category_cache();
         }
-        $socialgroups->update_cache();
     }
 
     /**

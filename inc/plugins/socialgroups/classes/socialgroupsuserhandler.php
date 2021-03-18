@@ -87,7 +87,7 @@ class socialgroupsuserhandler
     public function is_leader(int $gid=1, int $uid=0): bool
     {
         global $db, $mybb, $socialgroups;
-        if(!$gid)
+        if($gid < 1)
         {
             $socialgroups->error("invalid_group");
         }

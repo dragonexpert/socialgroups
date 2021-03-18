@@ -72,7 +72,11 @@ class socialgroups
         $lang->load("socialgroups");
         if(!$mybb->settings['socialgroups_enable'] || $mybb->settings['no_plugins'] == 1 || defined("NO_PLUGINS"))
         {
-            error($lang->socialgroups_not_enabled);
+            // Need this check or installation fails.
+            if(!defined("IN_ADMINCP"))
+            {
+                error($lang->socialgroups_not_enabled);
+            }
         }
         // Load the rest of the classes.
         $files = scandir(MYBB_ROOT . "/inc/plugins/socialgroups/classes");

@@ -87,7 +87,7 @@ function socialgroups_insert_templates()
 function socialgroups_delete_templates()
 {
     global $db;
-    $db->delete_query("templategroups", "title='Social Group Templates'");
+    $db->delete_query("templategroups", "title='<lang:socialgroup>'");
     $db->delete_query("templates", "title LIKE 'socialgroups_%'");
 
     // Use this area for undoing template changes.
