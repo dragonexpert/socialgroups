@@ -7,7 +7,7 @@ $templatelist = "socialgroups_group_cp,socialgroups_join_request_request,socialg
 $templatelist .= ",socialgroups_groupcp_page,socialgroups_add_leader_page,socialgroups_add_remove_leaders,socialgroups_groupcp_group";
 $templatelist .= ",socialgroups_remove_leader_page,socialgroups_unlock_group,socialgroups_lock_group,socialgroups_groupcp_modcolumn";
 $templatelist .= ",socialgroups_join_request_page,socialgroups_join_request_no_requests,socialgroups_join_request_request";
-$templatelist .= ",socialgroups_add_member_form,socialgroups_remove_member_form";
+$templatelist .= ",socialgroups_add_member_form,socialgroups_remove_member_form,socialgroups_unapprove_group,socialgroups_approve_group";
 define("THIS_SCRIPT", "groupcp.php");
 require_once "global.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -385,6 +385,14 @@ while($group = $db->fetch_array($groupquery))
     }
     if($socialgroups->socialgroupsuserhandler->is_moderator($group['gid'], $mybb->user['uid']))
     {
+        if($group['approved'] == 1)
+        {
+            eval("\$approvegroup =\"" . $templates->get("socialgroups_unapprove_group") . "\";");
+        }
+        else
+        {
+            eval("\$approvegroup =\"" . $templates->get("socialgroups_approve_group") . "\";");
+        }
         if($group['locked'])
         {
             eval("\$lockgroup =\"" . $templates->get("socialgroups_unlock_group") . "\";");

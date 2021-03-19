@@ -41,6 +41,55 @@ if($mybb->get_input("action"))
 {
     $action = $mybb->get_input("action");
 }
+if($groupinfo['approved'] == 0)
+{
+    if($action != "approvegroup")
+    {
+        $socialgroups->error("invalid_group");
+    }
+}
+if($action == "approvegroup")
+{
+    if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+    {
+        $socialgroups->socialgroupsdatahandler->save_group(array("approved" => 1), "update", "gid=" . $gid);
+        $data = array(
+            "gid" => $gid,
+            "groupname" => $groupinfo['name'],
+            "action" => "Approved Group: " . $db->escape_string($groupinfo['name'])
+        );
+
+        log_moderator_action($data, "Approved Group: " . $db->escape_string($groupinfo['name']));
+        $url = "groupcp.php";
+        $message = "The group has been approved.";
+        redirect($url, $message);
+    }
+    else
+    {
+        error_no_permission();
+    }
+}
+if($action == "unapprovegroup")
+{
+    if($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
+    {
+        $socialgroups->socialgroupsdatahandler->save_group(array("approved" => 0), "update", "gid=" . $gid);
+        $data = array(
+            "gid" => $gid,
+            "groupname" => $groupinfo['name'],
+            "action" => "Unapproved Group: " . $db->escape_string($groupinfo['name'])
+        );
+
+        log_moderator_action($data, "Unapproved Group: " . $db->escape_string($groupinfo['name']));
+        $url = "groupcp.php";
+        $message = "The group has been unapproved.";
+        redirect($url, $message);
+    }
+    else
+    {
+        error_no_permission();
+    }
+}
 if($action == "joingroup")
 {
     //Our function does all the hard work of figuring out if a person can join.
