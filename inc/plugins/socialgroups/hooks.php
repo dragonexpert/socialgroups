@@ -188,7 +188,7 @@ function socialgroups_fetch_wol_activity_end($user_activity)
     {
         $user_activity['activity'] = "groupcp";
     }
-    if(stripos($user_activity['location'] == "editgroup.php"))
+    if(stripos($user_activity['location'], "editgroup.php"))
     {
         $user_activity['activity'] = "editgroup";
     }
