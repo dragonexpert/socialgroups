@@ -12,9 +12,10 @@ require_once "socialgroups/hooks.php";
 
 function socialgroups_info()
 {
+    $donation_link = "<a href='https://www.paypal.com/donate?hosted_button_id=EYFBDTL42YYDW' target='_blank'>Donating</a>";
     return array(
         "name" => "Social Groups",
-        "description" => "Allows users to create their own groups.",
+        "description" => "Allows users to create their own groups. If this plugin helps you, please consider " . $donation_link . " to help support the developer." ,
         "author" => "Mark Janssen",
         "version" => "1.8.0",
         "codename" => "socialgroups"
