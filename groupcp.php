@@ -8,6 +8,7 @@ $templatelist .= ",socialgroups_groupcp_page,socialgroups_add_leader_page,social
 $templatelist .= ",socialgroups_remove_leader_page,socialgroups_unlock_group,socialgroups_lock_group,socialgroups_groupcp_modcolumn";
 $templatelist .= ",socialgroups_join_request_page,socialgroups_join_request_no_requests,socialgroups_join_request_request";
 $templatelist .= ",socialgroups_add_member_form,socialgroups_remove_member_form,socialgroups_unapprove_group,socialgroups_approve_group";
+$templatelist .= ",socialgroups_manage_permissions_page";
 define("THIS_SCRIPT", "groupcp.php");
 require_once "global.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -37,6 +38,50 @@ if($mybb->get_input("gid"))
         }
     }
 
+    if($mybb->get_input("action") == "manage_permissions")
+    {
+        $permissions = $socialgroups->load_permissions($gid);
+        if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
+        {
+            $new_permissions = array(
+                "postthreads" => $mybb->get_input("postthreads", MyBB::INPUT_INT),
+                "postreplies" => $mybb->get_input("postreplies", MyBB::INPUT_INT),
+                "inviteusers" => $mybb->get_input("inviteusers", MyBB::INPUT_INT),
+                "deleteposts" => $mybb->get_input("deleteposts", MyBB::INPUT_INT)
+            );
+            $new_permissions = $plugins->run_hooks("groupcp_manage_permissions_commit", $new_permissions);
+            $db->delete_query("socialgroup_member_permissions", "gid=" . $gid);
+            $db->insert_query("socialgroup_member_permissions", $new_permissions);
+            $url = $mybb->settings['bburl'] . "/groupcp.php?gid=" . $gid;
+            $message = "The group permissions have been updated.";
+            redirect($url, $message);
+        }
+        else
+        {
+            add_breadcrumb("Manage Permissions", "groupcp.php?gid=" . $gid . "&amp;action=manage_permissions");
+            $selected = array();
+            foreach($permissions as $key => $value)
+            {
+                if($value == 1)
+                {
+                    $selected[$key] = " selected=\"selected\" ";
+                }
+                else if($value == 0)
+                {
+                    $selected[$key] = "";
+                }
+                else
+                {
+                    // Fallback for custom permissions that are not a yes/no
+                    $selected[$key] = $value;
+                }
+            }
+            $plugins->run_hooks("groupcp_manage_permissions");
+            eval("\$permission_page =\"".$templates->get("socialgroups_manage_permissions_page")."\";");
+            output_page($permission_page);
+            exit;
+        }
+    }
     if($mybb->get_input("action") == "add_member")
     {
         $title = "Add Member";
