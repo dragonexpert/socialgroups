@@ -19,7 +19,8 @@ class socialgroupsreports
 
     function __construct()
     {
-        $this->load_reported_posts(1);
+        // Once this is actually implemented, uncomment the line below.
+        // $this->load_reported_posts(1);
     }
 
     /**
