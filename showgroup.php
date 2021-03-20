@@ -21,6 +21,7 @@ $socialgroups = new socialgroups($gid, 1, 1, 1);
 add_breadcrumb($lang->socialgroups, "groups.php");
 $groupinfo = $socialgroups->load_group($gid);
 $cid = $socialgroups->group[$gid]['cid'];
+$permissions = $socialgroups->load_permissions($gid);
 $title = stripcslashes($socialgroups->group[$gid]['name']);
 add_breadcrumb($socialgroups->category[$cid]['name'], $socialgroups->breadcrumb_link("category", $cid, $socialgroups->category[$cid]['name']));
 add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), $socialgroups->breadcrumb_link("group", $gid, $groupinfo['name']));
@@ -128,7 +129,7 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
     eval("\$editgrouplink =\"".$templates->get("socialgroups_edit_group_link")."\";");
     $announcementmoderator = 1;
 }
-if($action == "newthread")
+if($action == "newthread" && $permissions['postthreads'] != 0)
 {
     if(!in_array($uid, $members))
     {
@@ -282,8 +283,6 @@ while($groupmember = $db->fetch_array($leaderquery))
 // Gather the who's online
 $socialgroups->socialgroupsuserhandler->viewing_group($gid);
 
-// New thread button
-$permissions = $socialgroups->load_permissions($gid);
 if($permissions['postthreads'] == 1 && in_array($uid, $members) || in_array($uid, $leaders)) // Only members can post threads assuming leaders allow this
 {
     if(!$groupinfo['locked'])
