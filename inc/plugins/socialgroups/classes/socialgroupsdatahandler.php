@@ -8,7 +8,7 @@ if(!defined("IN_MYBB"))
     die("Direct access not allowed to the data handler.");
 }
 
-class socialgroupsdatahandler
+class socialgroupsdatahandler extends socialgroups
 {
 
     function __construct()

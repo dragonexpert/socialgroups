@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  * This file handles reported content from Social Groups.
  */
 if(!defined("IN_MYBB"))
@@ -9,13 +8,13 @@ if(!defined("IN_MYBB"))
     die("Direct access not allowed.");
 }
 
-class socialgroupsreports
+class socialgroupsreports extends socialgroups
 {
     /* This class handles all aspects of reporting posts. */
 
-    public $reportedposts = array();
+    private $reportedposts = array();
 
-    public $canreport = array();
+    private $canreport = array();
 
     function __construct()
     {
