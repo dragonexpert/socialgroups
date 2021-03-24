@@ -137,7 +137,8 @@ function socialgroups_postbit(&$post)
         {
             $post['button_report'] = "";
         }
-        if($socialgroups->permissions[$post['gid']]['deleteposts'] == 1 && $post['uid'] == $mybb->user['uid'] ||
+        $permissions = $socialgroups->load_permissions($post['gid']);
+        if($permissions[$post['gid']]['deleteposts'] == 1 && $post['uid'] == $mybb->user['uid'] ||
             $socialgroups->socialgroupsuserhandler->is_moderator($post['gid'], $mybb->user['uid']) ||
             $socialgroups->socialgroupsuserhandler->is_leader($post['gid'], $mybb->user['uid']))
         {
