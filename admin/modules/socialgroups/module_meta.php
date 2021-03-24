@@ -17,13 +17,15 @@ function socialgroups_meta()
     $sub_menu[30] = array("id" => "announcements", "title" => "Announcements", "link" => "index.php?module=socialgroups-announcements");
     $sub_menu[40] = array("id" => "moderators", "title" => "Moderators", "link" => "index.php?module=socialgroups-moderators");
     $sub_menu[50] = array("id" => "leaders", "title" => "Leaders", "link" => "index.php?module=socialgroups-leaders");
+    $sub_menu[60] = array("id" => "templates", "title" => "Templates", "link" => "index.php?module=socialgroups-templates");
+    $sub_menu[70] = array("id" => "restore", "title" => "Deleted Content", "link" => "index.php?module=socialgroups-restore");
     $sub_menu = $plugins->run_hooks("admin_socialgroups_menu", $sub_menu);
     $plugincache = $cache->read("plugins");
     if(in_array("socialgroups", $plugincache['active']))
     {
         $page->add_menu_item("Social Groups", "socialgroups", "index.php?module=socialgroups", 384, $sub_menu);
     }
-    return TRUE;
+    return true;
 }
 
 function socialgroups_action_handler($action)
@@ -36,7 +38,9 @@ function socialgroups_action_handler($action)
         "groups" => array("active" => "groups", "file" => "groups.php"),
         "announcements" => array("active" => "announcements", "file" => "announcements.php"),
         "moderators" => array("active" => "moderators", "file" => "moderators.php"),
-        "leaders" => array("active" => "leaders", "file" => "leaders.php")
+        "leaders" => array("active" => "leaders", "file" => "leaders.php"),
+        "templates" => array("active" => "templates", "file" => "templates.php"),
+        "restore" => array("active" => "restore", "file" => "restore.php")
     );
 
     $actions = $plugins->run_hooks("admin_socialgroups_action_handler", $actions);
@@ -62,7 +66,9 @@ function socialgroups_admin_permissions()
         "groups" => "Can Manage Social Groups?",
         "announcements" => "Can Manage Social Group Announcements?",
         "moderators" => "Can Manage Social Group Moderators?",
-        "leaders" => "Can Manage Social Group Leaders?"
+        "leaders" => "Can Manage Social Group Leaders?",
+        "templates" => "Can Manage Social Group Templates?",
+        "restore" => "Can Manage Deleted Content?"
     );
 
     $admin_permissions = $plugins->run_hooks("admin_socialgroups_permissions", $admin_permissions);

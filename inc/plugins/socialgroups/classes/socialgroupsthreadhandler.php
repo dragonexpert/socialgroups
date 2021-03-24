@@ -254,7 +254,7 @@ class socialgroupsthreadhandler
         {
             // Get the thread so we have mod log data.
             $query = $db->query("SELECT p.uid as poster, p.*, t.*
-            FROM " . TABLE_PREFIX . "socialgroup_posts
+            FROM " . TABLE_PREFIX . "socialgroup_posts p
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
             WHERE p.pid=$pid");
             $thread = $db->fetch_array($query);
@@ -263,11 +263,11 @@ class socialgroupsthreadhandler
             if($permanent == 1)
             {
                 $db->delete_query("socialgroup_posts", "pid=$pid");
-                $action = $lang->soft_delete_post;
+                $action = "Permanently Deleted Post";
             }
             else
             {
-                $action = $lang->delete_post;
+                $action = "Soft Deleted Post";
                 $db->update_query("socialgroup_posts", array("visible" => -1), "pid=$pid");
             }
             $this->recount_posts($gid, $thread['tid']);
@@ -285,6 +285,7 @@ class socialgroupsthreadhandler
 
             $query = $db->query("SELECT p.*, t.tid, u.username FROM " . TABLE_PREFIX . "socialgroup_posts p
             LEFT JOIN " . TABLE_PREFIX . "users u ON(p.uid=u.uid)
+            LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
             WHERE p.tid=" . $thread['tid'] . " AND p.visible=1 AND t.visible=1"
             . " ORDER BY p.dateline DESC
             LIMIT 1");
@@ -303,7 +304,8 @@ class socialgroupsthreadhandler
             $data = array(
                 "gid" => $thread['gid'],
                 "subject" => $db->escape_string($thread['subject']),
-                "conid" => $thread['tid']
+                "conid" => $thread['tid'],
+                "action" => "Deleted Post"
             );
             log_moderator_action($data, $action);
         }
@@ -311,6 +313,115 @@ class socialgroupsthreadhandler
         {
             error_no_permission();
         }
+    }
+
+    /**
+     * This function restores a thread
+     * @param int $tid The id of the thread
+     * @param bool $validity_check Whether to validate if the thread exists.
+     */
+    public function restore_thread(int $tid=0, bool $validity_check = true)
+    {
+        global $db, $socialgroups, $plugins, $mybb, $lang;
+        if(!$tid)
+        {
+            $socialgroups->error("invalid_thread");
+        }
+        $query = $db->simple_select("socialgroup_threads", "*", "tid=" . $tid);
+        $thread = $db->fetch_array($query);
+        if($validity_check)
+        {
+            if(!isset($thread['tid']))
+            {
+                $socialgroups->error("invalid_thread");
+            }
+        }
+        $db->update_query("socialgroup_threads", array("visible" => 1), "tid=" . $tid);
+        $data = array(
+            "gid" => $thread['gid'],
+            "subject" => $db->escape_string($thread['subject']),
+            "conid" => $thread['tid'],
+            "action" => "Restored Thread"
+        );
+        log_moderator_action($data, "Restore Thread");
+
+        $this->recount_posts($thread['gid']);
+        $this->recount_threads($thread['gid']);
+
+        // Update last post info
+        $query = $db->query("SELECT p.*, t.tid FROM " . TABLE_PREFIX . "socialgroup_posts p
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
+        WHERE p.gid=" . $thread['gid'] . " AND p.visible=1 AND t.visible=1
+        ORDER BY dateline DESC
+        LIMIT 1");
+        $lastpost = $db->fetch_array($query);
+        $db->free_result($query);
+
+        $last_post_info = array(
+            "lastposttime" => $lastpost['dateline'],
+            "lastposttid" => $lastpost['tid']
+        );
+        $db->update_query("socialgroups", $last_post_info, "gid=" . $thread['gid']);
+        $userquery = $db->simple_select("socialgroup_threads", "DISTINCT uid", "tid=" . $tid);
+        while($poster = $db->fetch_array($userquery))
+        {
+            $this->update_user_stats($poster['uid'], true);
+        }
+        $db->free_result($userquery);
+        $plugins->run_hooks("class_socialgroupsthreadhandler_restore_thread");
+        $socialgroups->update_cache();
+    }
+
+    /**
+     * This function restores a deleted post.
+     * @param int $pid The id of the post
+     * @param bool $sanity_check Whether to verify if the post exists.
+     */
+    public function restore_post(int $pid=0, bool $sanity_check = true)
+    {
+        global $db, $socialgroups, $plugins, $mybb, $lang;
+        if(!$pid)
+        {
+            $socialgroups->error("invalid_post");
+        }
+        $query = $db->query("SELECT p.*, t.subject FROM " . TABLE_PREFIX . "socialgroup_posts p
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.pid=t.firstpost)
+        WHERE p.pid=" . $pid);
+        $post = $db->fetch_array($query);
+        if($sanity_check)
+        {
+            if (!isset($post['pid']))
+            {
+                $socialgroups->error("invalid_post");
+            }
+        }
+        $db->update_query("socialgroup_posts", array("visible" => 1), "pid=" . $pid);
+        $data = array(
+            "gid" => $post['gid'],
+            "subject" => $db->escape_string($post['subject']),
+            "conid" => $post['tid'],
+            "action" => "Restored Post"
+        );
+        log_moderator_action($data, "Restore Post");
+        $this->recount_posts($post['gid']);
+        $this->update_user_stats($post['uid'], true);
+
+        // Update last post info
+        $query = $db->query("SELECT p.*, t.tid FROM " . TABLE_PREFIX . "socialgroup_posts p
+        LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(p.tid=t.tid)
+        WHERE p.gid=" . $post['gid'] . " AND p.visible=1 AND t.visible=1
+        ORDER BY dateline DESC
+        LIMIT 1");
+        $lastpost = $db->fetch_array($query);
+        $db->free_result($query);
+
+        $last_post_info = array(
+            "lastposttime" => $lastpost['dateline'],
+            "lastposttid" => $lastpost['tid']
+        );
+        $db->update_query("socialgroups", $last_post_info, "gid=" . $post['gid']);
+        $plugins->run_hooks("class_socialgroupsthreadhandler_restore_post");
+        $socialgroups->update_cache();
     }
 
     /**
@@ -331,13 +442,14 @@ class socialgroupsthreadhandler
         $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
         $thread = $db->fetch_array($query);
         $plugins->run_hooks("class_socialgroupsthreadhandler_delete_thread");
+        $action = "";
         if($permanent == 1)
         {
+            $action = $lang->delete_thread;
             if ($socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
             {
                 $db->delete_query("socialgroup_threads", "tid=$tid");
                 $db->delete_query("socialgroup_posts", "tid=$tid");
-                $action = $lang->delete_thread;
             }
         }
         else if(($socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']) || $socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid'])) && $permanent != 1)
@@ -377,6 +489,7 @@ class socialgroupsthreadhandler
             "gid" => $thread['gid'],
             "conid" => $thread['tid'],
             "subject" => $db->escape_string($thread['subject']),
+            "action" => $action
         );
 
         log_moderator_action($data, $action);
