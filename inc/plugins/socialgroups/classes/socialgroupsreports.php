@@ -25,8 +25,9 @@ class socialgroupsreports extends socialgroups
     /**
      * Loads the reported posts.
      * @param int $read Whether to include read reports.
+     * @return array An array of reported posts.
      */
-    public function load_reported_posts(int $read=0)
+    public function load_reported_posts(int $read=0): array
     {
         global $db;
         if($read)
@@ -41,15 +42,16 @@ class socialgroupsreports extends socialgroups
         {
             $this->reportedposts[$post['pid']] = $post;
         }
+        return $this->reportedposts;
     }
 
     /**
      * This function checks if a user can report a post.
      * @param int $uid The id of the user.
      * @param int $pid The id of the post.
-     * @return bool|mixed false or true.
+     * @return bool false or true.
      */
-    public function can_report(int $uid=0, int $pid=0)
+    public function can_report(int $uid=0, int $pid=0): bool
     {
         global $mybb, $db, $socialgroups, $plugins;
         if(!$pid)
