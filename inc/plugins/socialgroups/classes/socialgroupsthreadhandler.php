@@ -7,7 +7,7 @@ if(!defined("IN_MYBB"))
     die("Direct access not allowed.");
 }
 
-class socialgroupsthreadhandler
+class socialgroupsthreadhandler extends socialgroups
 {
 
     function __construct()

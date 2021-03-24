@@ -340,7 +340,7 @@ if($mybb->get_input("gid"))
     if($mybb->get_input("action") == "add_leader")
     {
         $title = "Add Leader";
-        if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
+        if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
         {
             // This function handles validation.
             $success = $socialgroups->socialgroupsuserhandler->add_leader($gid, $mybb->get_input("leader", MyBB::INPUT_INT));
@@ -376,7 +376,7 @@ if($mybb->get_input("gid"))
     if($mybb->get_input("action") == "remove_leader")
     {
         $title = "Remove Leader";
-        if($mybb->request_method == "POST" && verify_post_check($mybb->get_input("my_post_key")))
+        if($mybb->request_method == "post" && verify_post_check($mybb->get_input("my_post_key")))
         {
             $success = $socialgroups->socialgroupsuserhandler->remove_leader($gid, $mybb->input['leader']);
             $message = "Removed leader successfully.";

@@ -20,13 +20,15 @@ $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
 $socialgroups = new socialgroups($gid, 1, 1, 1);
 add_breadcrumb($lang->socialgroups, "groups.php");
 $groupinfo = $socialgroups->load_group($gid);
-$cid = $socialgroups->group[$gid]['cid'];
+$socialgroups_group_cache = $cache->read("socialgroups");
+$socialgroups_category_cache = $cache->read("socialgroups_categories");
+$cid = $socialgroups_group_cache[$gid]['cid'];
 $permissions = $socialgroups->load_permissions($gid);
-$title = stripcslashes($socialgroups->group[$gid]['name']);
-add_breadcrumb($socialgroups->category[$cid]['name'], $socialgroups->breadcrumb_link("category", $cid, $socialgroups->category[$cid]['name']));
-add_breadcrumb(stripcslashes($socialgroups->group[$gid]['name']), $socialgroups->breadcrumb_link("group", $gid, $groupinfo['name']));
-$members = $socialgroups->socialgroupsuserhandler->members[$gid];
-$leaders = $socialgroups->socialgroupsuserhandler->leaders[$gid];
+$title = stripcslashes($socialgroups_group_cache[$gid]['name']);
+add_breadcrumb($socialgroups_category_cache[$cid]['name'], $socialgroups->breadcrumb_link("category", $cid, $socialgroups_category_cache[$cid]['name']));
+add_breadcrumb(stripcslashes($socialgroups_group_cache[$gid]['name']), $socialgroups->breadcrumb_link("group", $gid, $groupinfo['name']));
+$members = $socialgroups->socialgroupsuserhandler->load_members($gid);
+$leaders = $socialgroups->socialgroupsuserhandler->load_leaders($gid);
 $canviewgroup = 1;
 if($groupinfo['private'] && !$socialgroups->socialgroupsuserhandler->is_member($gid, $mybb->user['uid'])
     && !$socialgroups->socialgroupsuserhandler->is_moderator($gid, $mybb->user['uid']))
@@ -247,7 +249,7 @@ $totalusers = $db->num_rows($memberquery);
 $doneusers = 0;
 $plugins->run_hooks("showgroup_start");
 $joinlink = "";
-if(in_array($uid, $members) && $uid!=$socialgroups->group[$gid]['uid']) // The owner can't leave the group.
+if(in_array($uid, $members) && $uid != $socialgroups_group_cache[$gid]['uid']) // The owner can't leave the group.
 {
     eval("\$joinlink =\"".$templates->get("socialgroups_leave_link")."\";");
 }
@@ -311,7 +313,8 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
     eval("\$modcolumn =\"".$templates->get("socialgroups_mod_column")."\";");
 }
 $announcement_count = 0;
-foreach($socialgroups->announcements[$gid] as $announcement)
+$announcements_loaded = $socialgroups->load_announcements($gid);
+foreach($announcements_loaded[$gid] as $announcement)
 {
     ++$announcement_count;
     $plugins->run_hooks("showgroup_announcement");
@@ -457,7 +460,7 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
 {
     eval("\$modtools =\"".$templates->get("socialgroups_mod_tools")."\";");
     eval("\$addannouncementlink =\"".$templates->get("socialgroups_add_announcement_link")."\";");
-    if($mybb->user['uid'] == $socialgroups->group[$gid]['uid'])
+    if($mybb->user['uid'] == $socialgroups_group_cache[$gid]['uid'])
     {
         eval("\$managegrouplink =\"".$templates->get("socialgroups_manage_link")."\";");
     }

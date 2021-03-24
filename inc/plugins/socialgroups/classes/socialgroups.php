@@ -11,42 +11,42 @@ if(!defined("IN_MYBB"))
 class socialgroups
 {
     /* The version of socialgroups */
-    public $version = 1800;
+    private $version = 1800;
 
     /* A cache of social groups already loaded
     * Format is $this->group[$gid]['field'] */
 
-    public $group = array();
+    protected $group = array();
 
     /* A listing of all groups with information. */
 
-    public $group_list = array();
+    protected $group_list = array();
 
     /* A cache of categories loaded.
     * Format is $this->category[$cid][$field] */
 
-    public $category = array();
+    protected $category = array();
 
     /* An array of viewable categories for the current user.
     * Format is $this->viewable_categories[$cid] = $name */
 
-    public $viewable_categories= array();
+    protected $viewable_categories= array();
 
 
     /* A cache of info about the group.
     * Format is $this->permissions[$gid][$field] */
 
-    public $permissions = array();
+    protected $permissions = array();
 
     /* A cache of announcements for the group.
     * Format is $this->announcements[$gid][$aid] */
 
-    public $announcements = array();
+    protected $announcements = array();
 
     /* A cache of posts.
     * Format is $this->posts[$tid][$pid][$field] */
 
-    public $posts = array();
+    protected $posts = array();
 
     public $socialgroupsdatahandler;
 
@@ -144,6 +144,15 @@ class socialgroups
             }
             $plugins->run_hooks("class_socialgroups_constructor");
         }
+    }
+
+    /**
+     * This function returns what version of socialgroups is running.
+     * @return int
+     */
+    public function get_version()
+    {
+        return $this->version;
     }
 
     /**

@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 
 if(!defined("IN_MYBB"))
@@ -9,24 +8,24 @@ if(!defined("IN_MYBB"))
     die("Direct access to the user handler is not allowed.");
 }
 
-class socialgroupsuserhandler
+class socialgroupsuserhandler extends socialgroups
 {
     /* In functions where the parameter $uid is set to 0, it uses the current user for the parameter. */
 
     /* A cache of group members.
     * Format is $this->members[$gid][$uid] */
 
-    public $members = array();
+    private $members = array();
 
     /* A cache of group leaders.
     * Format is $this->leaders[$gid][$uid] */
 
-    public $leaders = array();
+    private $leaders = array();
 
     /* A cache of moderators.
    * Format is $this->moderators[$uid] */
 
-    public $moderators = array();
+    private $moderators = array();
 
     function __construct()
     {

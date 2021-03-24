@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 define("IN_MYBB", 1);
 define("THIS_SCRIPT", "creategroup.php");
@@ -25,7 +24,7 @@ if($mybb->usergroup['maxsocialgroups_create'] != 0)
         error("You have reached the limit for groups you can create.");
     }
 }
-if($mybb->request_method=="post" && verify_post_check($mybb->input['my_post_key']))
+if($mybb->request_method=="post" && verify_post_check($mybb->get_input("my_post_key")))
 {
     $new_group = array(
         "name" => $db->escape_string($mybb->get_input('name')),

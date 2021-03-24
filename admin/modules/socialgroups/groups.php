@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 
 if(!defined("IN_MYBB"))
@@ -114,10 +113,11 @@ function socialgroups_group_browse()
 
     // Load the categories
     $categories = $cache->read("socialgroups_categories");
+    $group_list = $socialgroups->list_groups();
 
-    foreach($socialgroups->group_list as $mainkey => $value)
+    foreach($group_list as $mainkey => $value)
     {
-        foreach($socialgroups->group_list[$mainkey] as $subkey)
+        foreach($group_list[$mainkey] as $subkey)
         {
             if($subkey['cid'] != $currentcid)
             {
@@ -149,7 +149,7 @@ function socialgroups_group_browse()
     }
 }
 
-function socialgroups_group_edit($gid)
+function socialgroups_group_edit(int $gid=0)
 {
     global $db, $mybb, $baseurl, $table, $socialgroups;
     $groupquery = $db->query("SELECT g.*, u.username FROM " . TABLE_PREFIX . "socialgroups g
@@ -268,24 +268,23 @@ function socialgroups_group_add()
     }
 }
 
-function socialgroups_group_delete($gid)
+function socialgroups_group_delete(int $gid=0)
 {
-    global $mybb, $db, $baseurl;
-    $gid = (int) $gid;
+    global $mybb, $db, $baseurl, $socialgroups;
     if($mybb->request_method=="post")
     {
         if ($mybb->get_input("confirm", MyBB::INPUT_INT) == 1)
         {
             // Delete the group
-            $db->delete_query("socialgroups", "gid=$gid");
-            $db->delete_query("socialgroup_members", "gid=$gid");
-            $db->delete_query("socialgroup_member_permissions", "gid=$gid");
-            $db->delete_query("socialgroup_leaders", "gid=$gid");
-            $db->delete_query("socialgroup_invites", "gid=$gid");
-            $db->delete_query("socialgroup_announcements", "gid=$gid");
-            $db->delete_query("socialgroup_threads", "gid=$gid");
-            $db->delete_query("socialgroup_posts", "gid=$gid");
-            flash_message("The group has been deleted.", "success");
+            $success = $socialgroups->socialgroupsdatahandler->delete_group($gid);
+            if($success)
+            {
+                flash_message("The group has been deleted.", "success");
+            }
+            else
+            {
+                flash_message("There was a problem deleting the group.", "error");
+            }
             admin_redirect($baseurl);
         }
         else
