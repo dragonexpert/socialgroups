@@ -27,7 +27,7 @@ if($mybb->get_input("gid"))
     $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
     $where = "gid=" . $gid;
     $groupinfo = $socialgroups->load_group($gid);
-    add_breadcrumb(htmlspecialchars_uni($groupinfo['name'], "groupcp.php?gid=" . $gid));
+    add_breadcrumb(htmlspecialchars_uni($groupinfo['name']), "groupcp.php?gid=" . $gid);
     // Validate if the person is in fact a group leader for the specific group
     if(!$socialgroups->socialgroupsuserhandler->is_leader($gid, $mybb->user['uid']))
     {
