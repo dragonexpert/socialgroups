@@ -17,7 +17,27 @@ require_once "inc/class_parser.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $lang->load("showthread");
 // We'll use the tid to get the group.
-$tid = $mybb->get_input("tid", MyBB::INPUT_INT);
+$tid = 0;
+if($mybb->get_input("tid"))
+{
+    $tid = $mybb->get_input("tid", MyBB::INPUT_INT);
+}
+if(!$tid)
+{
+    // See if a pid exists.  If so, load based on post.
+    if(!$mybb->get_input("pid"))
+    {
+        $socialgroups->error("invalid_thread");
+    }
+    $pid = $mybb->get_input("pid", MyBB::INPUT_INT);
+    $query = $db->simple_select("socialgroup_posts", "*", "pid=" . $pid);
+    $post = $db->fetch_array($query);
+    if(!isset($post['pid']))
+    {
+        $socialgroups->error("invalid_thread");
+    }
+    $tid = $post['tid'];
+}
 $query = $db->simple_select("socialgroup_threads", "*", "tid=$tid");
 $threadinfo = $db->fetch_array($query);
 $db->free_result($query);
@@ -87,6 +107,7 @@ if(in_array($action, $verifyactions))
 }
 if($action == "deletepost" && $mybb->get_input("pid"))
 {
+    $modaction = "Deleted Post";
     $socialgroups->socialgroupsthreadhandler->delete_post($mybb->get_input("pid", MyBB::INPUT_INT), $gid, 0);
 }
 if($action == "lock")
