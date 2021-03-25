@@ -24,3 +24,7 @@ should be named socialgroups_(Hook_Name) because this way it will not intefere w
 **Bugs**
 - It is expected that there will be bugs early on.  Make sure to create an issue for them. Even better if you can do a Pull Request that resolves it.
 - If you don't have a solve for it, please list how to reproduce so I can verify whether I get that same issue on my site.
+
+**Join Space**
+- If you would like to discuss the project or make contributions, you can join in on space (teamdimensional.jetbrains.space)[here].  You could easily work on developing a plugin to extend socialgroups in this environment
+while being able to have direct contact with developers of Socialgroups.
