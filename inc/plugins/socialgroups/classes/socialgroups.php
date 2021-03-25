@@ -60,7 +60,7 @@ class socialgroups
      * socialgroups constructor.
      * This funciton loads all information about our socialgroups object.
      * @param int $gids Can be array of integers or single integer.  Loads the designated groups.
-     * @param false $loadannouncements Whether to load announcements for the group.
+     * @param bool $loadannouncements Whether to load announcements for the group.
      * @param bool $loadmembers Whether to load the list of members for the group.
      * @param bool $loadmoderators Whether to load the moderators for the group.
      * @param bool $loadleaders Whether to load the group leaders for the group.
@@ -631,7 +631,7 @@ class socialgroups
             $categories = 0;
         }
 
-        $query = $db->query("SELECT s.*, c.name as categoryname, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions, t.lastpostusername, t.subject
+        $query = $db->query("SELECT s.*, c.name as categoryname, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions, t.lastpostusername, t.subject, t.lastpostuid
             FROM " . TABLE_PREFIX . "socialgroups s
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_categories c ON(s.cid=c.cid)
             LEFT JOIN " . TABLE_PREFIX . "socialgroup_threads t ON(s.lastposttid=t.tid)
@@ -706,6 +706,7 @@ class socialgroups
                         $currentcid = $subkey['cid'];
                         $subkey['category_link'] = "";
                     }
+                    $group_logo = "";
                     if ($subkey['logo'] != "")
                     {
                         $groupinfo['logo'] = $subkey['logo'];
