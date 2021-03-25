@@ -26,5 +26,5 @@ should be named socialgroups_(Hook_Name) because this way it will not intefere w
 - If you don't have a solve for it, please list how to reproduce so I can verify whether I get that same issue on my site.
 
 **Join Space**
-- If you would like to discuss the project or make contributions, you can join in on space (teamdimensional.jetbrains.space)[here].  You could easily work on developing a plugin to extend socialgroups in this environment
+- If you would like to discuss the project or make contributions, you can join in on space [here](teamdimensional.jetbrains.space).  You could easily work on developing a plugin to extend socialgroups in this environment
 while being able to have direct contact with developers of Socialgroups.
