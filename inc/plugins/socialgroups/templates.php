@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 
 /* This file handles all templates for Social Groups. Additional templates should be added at the bottom of socialgroups_insert_templates.*/
@@ -18,7 +17,7 @@ function socialgroups_insert_templates()
     // Create a template group just for social groups since this will get big.
 
     $template_group = array(
-        "prefix" => "socialgroups_",
+        "prefix" => "socialgroups",
         "title" => "<lang:socialgroup>",
         "isdefault" => 0
     );
