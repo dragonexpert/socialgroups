@@ -8,7 +8,7 @@ $templatelist .= ",socialgroups_groupcp_page,socialgroups_add_leader_page,social
 $templatelist .= ",socialgroups_remove_leader_page,socialgroups_unlock_group,socialgroups_lock_group,socialgroups_groupcp_modcolumn";
 $templatelist .= ",socialgroups_join_request_page,socialgroups_join_request_no_requests,socialgroups_join_request_request";
 $templatelist .= ",socialgroups_add_member_form,socialgroups_remove_member_form,socialgroups_unapprove_group,socialgroups_approve_group";
-$templatelist .= ",socialgroups_manage_permissions_page";
+$templatelist .= ",socialgroups_manage_permissions_page,socialgroups_announcement_manager_page,socialgroups_announcement_no_announcements,socialgroups_add_announcement_link";
 define("THIS_SCRIPT", "groupcp.php");
 require_once "global.php";
 require_once "inc/plugins/socialgroups/classes/socialgroups.php";
@@ -37,6 +37,53 @@ if($mybb->get_input("gid"))
             error_no_permission();
         }
     }
+
+    if($mybb->get_input("action") == "manage_announcements")
+    {
+        add_breadcrumb("Manage Announcements", "groupcp.php?gid=" . $gid . "&amp;action=manage_announcements");
+        $announcement_count = 0;
+        $announcements_loaded = $socialgroups->load_announcements($gid);
+        require_once "inc/class_parser.php";
+        $parser = new PostParser();
+        $parser_options = array(
+            "allow_mycode" => 1,
+            "allow_smilies"=> 1,
+            "filter_badwords" => 1,
+            "allow_html" => 0
+        );
+        foreach($announcements_loaded as $announcement)
+        {
+            // Don't show global announcements
+            if($announcement['gid'] != 0)
+            {
+                ++$announcement_count;
+                $plugins->run_hooks("groupcp_announcement");
+                $announcement['message'] = $parser->parse_message($announcement['message'], $parser_options);
+                $threadauthorcolspan = 2;
+                $colspan = 5;
+                $announcementcolspan = 1;
+                eval("\$announcementmanage =\"" . $templates->get("socialgroups_announcement_manage") . "\";");
+                $announcementavatar = "";
+                if ($mybb->settings['socialgroups_thread_avatar'])
+                {
+                    $avatar = $announcement['avatar'];
+                    $avatarurl = $avatar['image'];
+                    $dimensions = $avatar['width_height'];
+                    eval("\$announcementavatar =\"" . $templates->get("socialgroups_avatar") . "\";");
+                }
+                eval("\$announcements .=\"" . $templates->get("socialgroups_announcement_announcement") . "\";");
+            }
+        }
+        if($announcement_count == 0)
+        {
+            $colspan = 5;
+            eval("\$announcements .=\"" . $templates->get("socialgroups_announcement_no_announcements") . "\";");
+        }
+        eval("\$addannouncementlink = \"".$templates->get("socialgroups_add_announcement_link")."\";");
+        eval("\$announcement_manager = \"".$templates->get("socialgroups_announcement_manager_page")."\";");
+        output_page($announcement_manager);
+        exit;
+    } // End announcement manager
 
     if($mybb->get_input("action") == "manage_permissions")
     {
