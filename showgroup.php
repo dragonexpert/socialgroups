@@ -314,7 +314,7 @@ if($socialgroups->socialgroupsuserhandler->is_leader($gid, $uid) || $socialgroup
 }
 $announcement_count = 0;
 $announcements_loaded = $socialgroups->load_announcements($gid);
-foreach($announcements_loaded[$gid] as $announcement)
+foreach($announcements_loaded as $announcement)
 {
     ++$announcement_count;
     $plugins->run_hooks("showgroup_announcement");
