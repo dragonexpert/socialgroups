@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 if(!defined("IN_MYBB"))
 {
@@ -118,7 +117,7 @@ function socialgroups_category_edit(int $cid=0)
             "disporder" => $mybb->get_input("disporder", MyBB::INPUT_INT),
             "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT)
         );
-        $plugins->run_hooks("admin_socialgroups_category_do_edit");
+        $updated_category = $plugins->run_hooks("admin_socialgroups_category_do_edit", $updated_category);
         $db->update_query("socialgroup_categories", $updated_category, "cid=$cid");
         $socialgroups->update_socialgroups_category_cache();
         log_admin_action(array("action" => "category_edit", "cid" => $cid, "name" => $updated_category['name']));
@@ -205,7 +204,7 @@ function socialgroups_category_add()
             "disporder" => $mybb->get_input("disporder", MyBB::INPUT_INT),
             "staffonly" => $mybb->get_input("staffonly", MyBB::INPUT_INT)
         );
-        $plugins->run_hooks("admin_socialgroups_category_do_add");
+        $new_category = $plugins->run_hooks("admin_socialgroups_category_do_add", $new_category);
         $cid = $db->insert_query("socialgroup_categories", $new_category);
         $socialgroups->update_socialgroups_category_cache();
         log_admin_action(array("action" => "category_add", "cid" => $cid, "name" => $new_category['name']));
