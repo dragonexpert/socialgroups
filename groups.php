@@ -13,6 +13,7 @@ require_once "inc/plugins/socialgroups/classes/socialgroups.php";
 $socialgroups = new socialgroups();
 $usergroups = $cache->read("usergroups");
 $categoryinfo = $cache->read("socialgroups_categories");
+$plugins->run_hooks("groups_start");
 $members = $socialgroups->socialgroupsuserhandler->load_moderators();
 add_breadcrumb($lang->socialgroups, "groups.php");
 // This code fetches the moderators
@@ -114,5 +115,6 @@ if($mybb->usergroup['maxsocialgroups_create'] == 0 || $totalgroups < $mybb->user
 {
     eval("\$creategroupbutton =\"".$templates->get("socialgroups_create_group_button")."\";");
 }
+$plugins->run_hooks("groups_end");
 eval("\$socialgrouppage =\"".$templates->get("socialgroups_groups")."\";");
 output_page($socialgrouppage);
