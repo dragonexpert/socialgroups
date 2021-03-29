@@ -30,6 +30,12 @@ $sub_tabs['create'] = array(
 
 $table = new TABLE;
 
+$cid = 0;
+if($mybb->get_input("cid"))
+{
+    $cid = $mybb->get_input("cid", MyBB::INPUT_INT);
+}
+
 switch($action)
 {
     case "browse":
@@ -43,7 +49,7 @@ switch($action)
             "description" => "Editing category."
         );
         $page->output_nav_tabs($sub_tabs, "edit");
-        socialgroups_category_edit($mybb->get_input("cid", MyBB::INPUT_INT));
+        socialgroups_category_edit($cid);
         break;
     case "add":
         $page->output_nav_tabs($sub_tabs, "create");
@@ -52,11 +58,11 @@ switch($action)
     case "delete":
         $sub_tabs['delete'] = array(
             "title" => "Delete",
-            "link" => $baseurl . "&action=delete&cid=" . $mybb->get_input("cid"),
+            "link" => $baseurl . "&action=delete&cid=" . $cid,
             "description" => "Delete category."
         );
         $page->output_nav_tabs($sub_tabs, "delete");
-        socialgroups_category_delete($mybb->get_input("cid", MyBB::INPUT_INT));
+        socialgroups_category_delete($cid);
         break;
     case "merge":
         $sub_tabs['merge'] = array(
@@ -65,7 +71,7 @@ switch($action)
             "description" => "Merge category."
         );
         $page->output_nav_tabs($sub_tabs, "merge");
-        socialgroups_category_merge($mybb->get_input("cid", MyBB::INPUT_INT));
+        socialgroups_category_merge($cid);
         break;
     default:
         $plugins->run_hooks("admin_socialgroups_category_action");
@@ -120,6 +126,7 @@ function socialgroups_category_edit(int $cid=0)
         $updated_category = $plugins->run_hooks("admin_socialgroups_category_do_edit", $updated_category);
         $db->update_query("socialgroup_categories", $updated_category, "cid=$cid");
         $socialgroups->update_socialgroups_category_cache();
+        // Lang string admin_log_socialgroups_category_category_edit
         log_admin_action(array("action" => "category_edit", "cid" => $cid, "name" => $updated_category['name']));
         flash_message("Category " . $updated_category['name'] . "has been updated.", "success");
         admin_redirect($baseurl);
@@ -163,6 +170,8 @@ function socialgroups_category_delete(int $cid=0)
             {
                 $socialgroups->socialgroupsdatahandler->delete_group($group['gid']);
             }
+            // Lang string admin_log_socialgroups_category_category_delete
+            log_admin_action(array("action" => "category_delete", "cid" => $cid, "name" => $category['name']));
             $db->delete_query("socialgroup_categories", "cid=" . $cid);
             $socialgroups->update_socialgroups_category_cache();
             flash_message("The category " . stripcslashes($category['name']) . " has been deleted.", "success");
@@ -207,8 +216,9 @@ function socialgroups_category_add()
         $new_category = $plugins->run_hooks("admin_socialgroups_category_do_add", $new_category);
         $cid = $db->insert_query("socialgroup_categories", $new_category);
         $socialgroups->update_socialgroups_category_cache();
+        // Lang string admin_log_socialgroups_category_category_add
         log_admin_action(array("action" => "category_add", "cid" => $cid, "name" => $new_category['name']));
-        flash_message("Category " . $new_category['name'] . "has been created.", "success");
+        flash_message("Category " . $new_category['name'] . " has been created.", "success");
         admin_redirect($baseurl);
     }
     else
@@ -243,14 +253,17 @@ function socialgroups_category_merge(int $oldcid=0)
         if(!$newname)
         {
             $query = $db->simple_select("socialgroup_categories", "*", "cid=$newcid");
-            $categoryinfo = $db->fetch_array($query);
-            $newname = $categoryinfo['name'];
+            $category = $db->fetch_array($query);
+            $newname = $category['name'];
         }
+        // Lang string admin_log_socialgroups_category_category_merge
+        log_admin_action(array("action" => "category_merge", "oldcid" => $oldcid, "newcid" => $newcid, "name" => $category['name']));
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroups SET cid=$newcid WHERE cid=$oldcid");
         $countquery = $db->simple_select("socialgroups", "COUNT(gid) as total", "cid=$newcid");
         $groupcount = $db->fetch_field($countquery, "total");
         $db->write_query("UPDATE " . TABLE_PREFIX . "socialgroup_categories SET groups=$groupcount, name='$newname' WHERE cid=$newcid");
         $db->delete_query("socialgroup_categories", "cid=$oldcid");
+        $socialgroups->update_cache();
         $socialgroups->update_socialgroups_category_cache();
         flash_message("The categories have been merged.", "success");
         admin_redirect($baseurl);
