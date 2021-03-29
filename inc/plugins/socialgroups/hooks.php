@@ -8,18 +8,22 @@ if(!defined("IN_MYBB"))
     die("Direct access not allowed.");
 }
 
+// Admin CP Stuff
 $plugins->add_hook("admin_load", "socialgroups_admin_load");
-$plugins->add_hook("global_start", "socialgroups_global_start");
-$plugins->add_hook("global_intermediate", "socialgroups_global_intermediate");
+$plugins->add_hook("admin_home_index_output_message", "socialgroups_admin_home_index_output_message");
 $plugins->add_hook("admin_formcontainer_end", "socialgroups_admin_formcontainer_end");
 $plugins->add_hook("admin_user_groups_edit_commit", "socialgroups_admin_user_groups_edit_commit");
+$plugins->add_hook("admin_tools_get_admin_log_action", "socialgroups_admin_tools_get_admin_log_action");
+
+// Front End Stuff
+$plugins->add_hook("global_start", "socialgroups_global_start");
+$plugins->add_hook("global_intermediate", "socialgroups_global_intermediate");
 $plugins->add_hook("modcp_modlogs_start", "socialgroups_modcp_modlogs_start");
 $plugins->add_hook("modcp_modlogs_result", "socialgroups_modcp_modlogs_result");
 $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
 $plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
 $plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
-$plugins->add_hook("admin_tools_get_admin_log_action", "socialgroups_admin_tools_get_admin_log_action");
 
 function socialgroups_admin_load()
 {
@@ -112,6 +116,41 @@ function socialgroups_admin_tools_get_admin_log_action($plugin_array)
 
 
     return $plugin_array;
+}
+
+function socialgroups_admin_home_index_output_message()
+{
+    global $mybb, $cache, $db;
+    $table = new TABLE;
+    $table->construct_header("Socialgroups Stats", array("colspan" => 4));
+    $table->construct_row();
+    $table->construct_cell("<b>Socialgroups Version</b>");
+    $socialgroups_info = socialgroups_info();
+    $table->construct_cell($socialgroups_info['version']);
+    $table->construct_cell("<b>Last Updated</b>");
+    $table->construct_cell(my_date("relative", $socialgroups_info['lastupdated']));
+    $table->construct_row();
+    $categories = $cache->read("socialgroups_categories");
+    $groups = $cache->read("socialgroups");
+    $table->construct_cell("<b>Categories</b>", array("width" => "25%"));
+    $table->construct_cell(count($categories), array("width" => "25%"));
+    $table->construct_cell("<b>Groups</b>", array("width" => "25%"));
+    $table->construct_cell(number_format(count($groups)));
+    $table->construct_row();
+    // Fetch the number of group threads
+    $query = $db->simple_select("socialgroup_threads", "COUNT(tid) as threadcount", "visible=1");
+    $threadcount = $db->fetch_field($query, "threadcount");
+    $db->free_result($query);
+    $table->construct_cell("<b>Group Threads</b>");
+    $table->construct_cell(number_format($threadcount));
+    // Fetch the number of posts.
+    $query = $db->simple_select("socialgroup_posts", "COUNT(pid) as postcount", "visible=1");
+    $postcount = $db->fetch_field($query, "postcount");
+    $db->free_result($query);
+    $table->construct_cell("<b>Group Posts</b>");
+    $table->construct_cell(number_format($postcount));
+    $table->construct_row();
+    $table->output("Socialroups Stats");
 }
 
 function socialgroups_global_start()
