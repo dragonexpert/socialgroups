@@ -1,62 +1,38 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
-if(!defined("IN_MYBB"))
-{
-    die("Direct access not allowed.");
-}
-if(!$mybb->input['action'])
-{
-    $mybb->input['action'] = "browse";
-}
-
-require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
-$socialgroups = new socialgroups();
-$page->output_header("Social Group Leaders");
 
 $baseurl = "index.php?module=socialgroups-leaders";
-
-// Default Routes Always There
-$sub_tabs['browse'] = array(
-    'title'         => 'Browse',
-    'link'          => $baseurl,
-    'description'   => 'Browse Leaders'
-);
-
-$sub_tabs['create'] = array(
-    'title'         => 'Add Leader',
-    'link'          => $baseurl . '&action=add',
-    'description'   => 'Add a Leader'
-);
-
+require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
+$socialgroups = new socialgroups();
 $table = new TABLE;
+$page->output_header("Social Group Leaders");
+$sub_tabs = array(
+    "browse" => array(
+        "title" => "Browse",
+        "link" => $baseurl),
+    "create" => array(
+        "title" => "Add Leader",
+        "link" => $baseurl . "&action=add"
+    )
+);
+
+$page->output_nav_tabs($sub_tabs);
 
 switch($mybb->input['action'])
 {
     case "browse":
-        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_leaders_browse();
         break;
     case "add":
-        $page->output_nav_tabs($sub_tabs, 'create');
         socialgroups_leaders_add();
         break;
     case "delete":
-        $sub_tabs['delete'] = array(
-            'title'         => 'Remove Leader',
-            'link'          => $baseurl . '&action=delete&lid='.$mybb->input['lid'],
-            'description'   => 'Remove a Leader'
-        );
-
-        $page->output_nav_tabs($sub_tabs, 'delete');
-        socialgroups_leaders_delete($mybb->input['lid']);
+        socialgroups_leaders_delete($mybb->get_input("lid"));
         break;
     default:
-        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_leaders_browse();
-        break;
 }
 
 function socialgroups_leaders_browse()
@@ -74,7 +50,7 @@ function socialgroups_leaders_browse()
         $table->construct_cell(format_name($leader['username'], $leader['usergroup'],$leader['displaygroup']));
         $editgrouplink = "index.php?module=socialgroups-groups&action=edit&gid=" . $leader['gid'];
         $table->construct_cell("<a href='" . $editgrouplink . "'>" . htmlspecialchars_uni($leader['name']) . "</a>");
-        $deletelink = $baseurl . "&action=delete&lid=" . $leader['lid'];
+        $deletelink = $baseurl . "&action=delete&lid=" . $leader['lid'] . "&gid=" . $leader['gid'];
         $edituserlink = "index.php?module=user-users&action=edit&uid=" . $leader['uid'];
         $table->construct_cell("<a href='" . $edituserlink . "'>Edit User</a><br /><a href='" . $deletelink . "'>Delete</a>");
         $table->construct_row();
@@ -89,8 +65,8 @@ function socialgroups_leaders_add()
     {
         // First we need to get a userid from username
         $options = array("fields" => "uid", "username", "usergroup");
-        $user = get_user_by_username($mybb->input['username'], $options);
-        $gid = (int) $mybb->input['gid'];
+        $user = get_user_by_username($mybb->get_input("username"), $options);
+        $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
         if(!$user['uid'])
         {
             flash_message("Invalid User.", "error");
@@ -115,7 +91,10 @@ function socialgroups_leaders_add()
             "uid" => $user['uid'],
             "gid" => $gid
         );
-        $db->insert_query("socialgroup_leaders", $new_leader);
+        $socialgroups_cache = $cache->read("socialgroups");
+        $lid = $db->insert_query("socialgroup_leaders", $new_leader);
+        // Lang string admin_log_socialgroups_leaders_leaders_add
+        log_admin_action(array("action" => "leaders_add", "lid" => $lid, "groupname" => $socialgroups_cache[$gid]['name'], "leadername" => $mybb->get_input("username")));
         flash_message("The user has been added as a leader successfully.", "success");
         admin_redirect($baseurl);
     }
@@ -136,14 +115,21 @@ function socialgroups_leaders_add()
     }
 }
 
-function socialgroups_leaders_delete($lid)
+function socialgroups_leaders_delete(int $lid)
 {
-    global $mybb, $db, $baseurl;
-    $lid = (int) $lid;
+    global $mybb, $db, $baseurl, $cache;
+    $gid = $mybb->get_input("gid", MyBB::INPUT_INT);
+    $query = $db->query("SELECT l.*, u.username FROM " . TABLE_PREFIX . "socialgroup_leaders l
+    LEFT JOIN " . TABLE_PREFIX . "users u ON(l.uid=u.uid)
+    WHERE l.lid=" . $lid);
+    $user = $db->fetch_array($query);
     if($mybb->request_method == "post")
     {
         if($mybb->input['confirm'] == 1)
         {
+            $socialgroups_cache = $cache->read("socialgroups");
+            // Lang string admin_log_socialgroups_leaders_leaders_delete
+            log_admin_action(array("action" => "leaders_delete", "lid" => $lid, "groupname" => $socialgroups_cache[$user['gid']]['name'], "leadername" => $user['username']));
             $db->delete_query("socialgroup_leaders", "lid=$lid");
             flash_message("The leader has been deleted.","success");
         }
