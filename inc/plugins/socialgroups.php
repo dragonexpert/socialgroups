@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 if(!defined("IN_MYBB"))
 {
@@ -17,8 +16,9 @@ function socialgroups_info()
         "name" => "Social Groups",
         "description" => "Allows users to create their own groups. If this plugin helps you, please consider " . $donation_link . " to help support the developer." ,
         "author" => "Mark Janssen",
-        "version" => "1.8.0",
-        "codename" => "socialgroups"
+        "version" => "1826",
+        "codename" => "socialgroups",
+        "lastupdated" => 1617039617
     );
 }
 
