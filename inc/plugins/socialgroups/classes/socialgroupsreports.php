@@ -92,7 +92,7 @@ class socialgroupsreports extends socialgroups
             }
         }
         $this->canreport[$uid] = $canreport;
-        $plugins->run_hooks("class_socialgroups_reports_can_report", $this->can_report[$uid]);
+        $this->canreport[$uid] = $plugins->run_hooks("class_socialgroups_reports_can_report", $this->canreport[$uid]);
         return $this->canreport[$uid];
     }
 
@@ -135,7 +135,7 @@ class socialgroupsreports extends socialgroups
             "status" => 0,
             "reason" => $db->escape_string($data['reason'])
         );
-        $plugins->run_hooks("class_socialgroups_reports_report_post", $reportinfo);
+        $reportinfo = $plugins->run_hooks("class_socialgroups_reports_report_post", $reportinfo);
         $rid = $db->insert_query("socialgroup_reported_posts", $reportinfo);
         return $rid;
     }
@@ -165,7 +165,7 @@ class socialgroupsreports extends socialgroups
             "handledby" => $uid,
             "handledate" => TIME_NOW
         );
-        $plugins->run_hooks("class_socialgroups_reports_handle_report", $updated_report);
+        $updated_report = $plugins->run_hooks("class_socialgroups_reports_handle_report", $updated_report);
         $db->update_query("socialgroup_reported_posts", $updated_report, "rid=$rid");
     }
 
