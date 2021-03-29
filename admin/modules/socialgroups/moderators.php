@@ -1,62 +1,38 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
-if(!defined("IN_MYBB"))
-{
-    die("Direct access not allowed.");
-}
-if(!$mybb->input['action'])
-{
-    $mybb->input['action'] = "browse";
-}
-
-require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
-$socialgroups = new socialgroups();
-$page->output_header("Social Group Moderators");
 
 $baseurl = "index.php?module=socialgroups-moderators";
-
-// Default Routes Always There
-$sub_tabs['browse'] = array(
-    'title'         => 'Browse',
-    'link'          => $baseurl,
-    'description'   => 'Browse Moderators'
-);
-
-$sub_tabs['create'] = array(
-    'title'         => 'Add Moderator',
-    'link'          => $baseurl . '&action=add',
-    'description'   => 'Add a new Moderator'
-);
-
+require_once MYBB_ROOT . "/inc/plugins/socialgroups/classes/socialgroups.php";
+$socialgroups = new socialgroups();
 $table = new TABLE;
+$page->output_header("Social Group Moderators");
+$sub_tabs = array(
+    "browse" => array(
+        "title" => "Browse",
+        "link" => $baseurl),
+    "create" => array(
+        "title" => "Add Moderator",
+        "link" => $baseurl . "&action=add"
+    )
+);
+
+$page->output_nav_tabs($sub_tabs);
 
 switch($mybb->input['action'])
 {
     case "browse":
-        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_moderators_browse();
         break;
     case "add":
-        $page->output_nav_tabs($sub_tabs, 'create');
         socialgroups_moderators_add();
         break;
     case "delete":
-        $sub_tabs['delete'] = array(
-            'title'         => 'Remove Moderator',
-            'link'          => $baseurl . '&action=delete&mid='.$mybb->input['mid'],
-            'description'   => 'Remove a Moderator'
-        );
-
-        $page->output_nav_tabs($sub_tabs, 'delete');
-        socialgroups_moderators_delete($mybb->input['mid']);
+        socialgroups_moderators_delete($mybb->get_input("mid", MyBB::INPUT_INT));
         break;
     default:
-        $page->output_nav_tabs($sub_tabs, 'browse');
         socialgroups_moderators_browse();
-        break;
 }
 
 function socialgroups_moderators_browse()
@@ -97,7 +73,7 @@ function socialgroups_moderators_add()
     {
         // First we need to get a userid from username
         $options = array("fields" => "uid", "username", "usergroup");
-        $user = get_user_by_username($mybb->input['username'], $options);
+        $user = get_user_by_username($mybb->get_input("username"), $options);
         if(!$user['uid'])
         {
             flash_message("Invalid User.", "error");
@@ -121,7 +97,10 @@ function socialgroups_moderators_add()
         $new_moderator = array(
             "uid" => $user['uid']
         );
-        $db->insert_query("socialgroup_moderators", $new_moderator);
+        $mid = $db->insert_query("socialgroup_moderators", $new_moderator);
+        // Lang string admin_log_moderators_moderators_add
+        log_admin_action(array("action" => "moderators_add", "mid" => $mid, "moderatorname" => $mybb->get_input("username")));
+
         flash_message("The user has been added as a moderator successfully.", "success");
         admin_redirect($baseurl);
     }
@@ -136,14 +115,24 @@ function socialgroups_moderators_add()
     }
 }
 
-function socialgroups_moderators_delete($mid)
+function socialgroups_moderators_delete(int $mid)
 {
     global $mybb, $db, $baseurl;
-    $mid = (int) $mid;
+    $query = $db->query("SELECT m.*, u.username FROM " . TABLE_PREFIX . "socialgroup_moderators m
+    LEFT JOIN " . TABLE_PREFIX . "users u ON(m.uid=u.uid)
+    WHERE m.mid=" . $mid);
+    $moderator = $db->fetch_array($query);
+    if(!isset($moderator['uid']))
+    {
+        flash_message("Invalid Moderator", "error");
+        admin_redirect($baseurl);
+    }
     if($mybb->request_method == "post")
     {
         if($mybb->input['confirm'] == 1)
         {
+            // Lang string admin_log_socialgroups_moderators_moderators_delete
+            log_admin_action(array("action" => "moderators_delete", "mid" => $mid, "moderatorname" => $moderator['username']));
             $db->delete_query("socialgroup_moderators", "mid=$mid");
             flash_message("The moderator has been deleted.","success");
         }
@@ -151,6 +140,7 @@ function socialgroups_moderators_delete($mid)
     }
     else
     {
+        echo "Delete moderator: " . htmlspecialchars_uni($moderator['username']) . "?<br />";
         $form = new Form($baseurl . "&action=delete&mid=$mid", "post");
         $form_container = new FormContainer("Confirm Deletion");
         $form_container->output_row("Are you sure?", "", $form->generate_yes_no_radio("confirm", 0));
