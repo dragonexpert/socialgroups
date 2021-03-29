@@ -187,6 +187,8 @@ function socialgroups_group_edit(int $gid=0)
             $socialgroups->socialgroupsuserhandler->add_leader($gid, $updated_group['uid']);
         }
         $socialgroups->socialgroupsdatahandler->save_group($updated_group, "update", "gid=$gid");
+        // Lang string admin_log_socialgroups_groups_edit
+        log_admin_action(array("action" => "groups_edit", "gid" => $gid, "name" => $updated_group['name']));
         flash_message("Group Updated.", "success");
         admin_redirect($baseurl);
     }
@@ -236,7 +238,9 @@ function socialgroups_group_add()
         {
             $new_group['uid'] = $mybb->user['uid'];
         }
-        $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
+        $group_data = $socialgroups->socialgroupsdatahandler->save_group($new_group, "insert");
+        // Lang string admin_log_socialgroups_groups_groups_add
+        log_admin_action(array("action" => "groups_add", "gid" => $group_data['gid'], "name" => $new_group['name']));
         flash_message("Group created.", "success");
         admin_redirect($baseurl);
     }
@@ -271,11 +275,15 @@ function socialgroups_group_add()
 function socialgroups_group_delete(int $gid=0)
 {
     global $mybb, $db, $baseurl, $socialgroups;
+    $query = $db->simple_select("socialgroups", "*", "gid=" . $gid);
+    $groupinfo = $db->fetch_array($query);
     if($mybb->request_method=="post")
     {
         if ($mybb->get_input("confirm", MyBB::INPUT_INT) == 1)
         {
             // Delete the group
+            // Lang string admin_log_socialgroups_groups_groups_delete
+            log_admin_action(array("action" => "groups_delete", "gid" => $gid, "name" => $groupinfo['name']));
             $success = $socialgroups->socialgroupsdatahandler->delete_group($gid);
             if($success)
             {
@@ -292,6 +300,7 @@ function socialgroups_group_delete(int $gid=0)
             admin_redirect($baseurl);
         }
     }
+    echo "Are you sure you wish to delete group: " . htmlspecialchars_uni($groupinfo['name']) . "?<br />";
     $form = new DefaultForm("index.php?module=socialgroups-groups&action=delete&gid=$gid", "post");
     $form_container = new FormContainer("Confirm Delete");
     $form_container->output_row("Are you sure?", "This action cannot be undone.", $form->generate_yes_no_radio("confirm", 0));
