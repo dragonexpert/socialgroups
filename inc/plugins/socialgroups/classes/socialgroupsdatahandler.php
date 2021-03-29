@@ -21,9 +21,10 @@ class socialgroupsdatahandler extends socialgroups
      * @param array $data An array of data about the group.
      * @param string $method Either insert or update.
      * @param string $where The where clause.  Used for update.
+     * @return array An array about the group.  When insert is used, the key gid is present.
      */
 
-    public function save_group(array $data, string $method="update", string $where="")
+    public function save_group(array $data, string $method="update", string $where=""): array
     {
         global $mybb, $db, $plugins, $lang, $socialgroups, $socialgroupsuserhandler, $cache;
         if($method != "insert" && $method != "update")
@@ -91,6 +92,7 @@ class socialgroupsdatahandler extends socialgroups
             $db->update_query("socialgroups", $data, $where);
             $plugins->run_hooks("class_socialgroupsdatahandler_update_group");
             $socialgroups->update_cache();
+            return $data;
         }
         if($method == "insert")
         {
@@ -111,6 +113,9 @@ class socialgroupsdatahandler extends socialgroups
             );
             $db->update_query("socialgroup_categories", $update_category, "cid=" . $data['cid']);
             $socialgroups->update_socialgroups_category_cache();
+            // Return a gid so admin log can work
+            $data['gid'] = $gid;
+            return $data;
         }
     }
 
