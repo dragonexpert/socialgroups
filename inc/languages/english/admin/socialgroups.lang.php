@@ -1,15 +1,32 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 $l['socialgroup'] = "Social Group";
 $l['social_groups'] = "Social Groups";
-$l['admin_log_user_social_groups_manage_group'] = "Edited Social Group # {2} ( {3} )";
-$l['admin_log_user_social_groups_manage_categories_add_category'] = "Created Social Group Category # {2} ( {3} )";
-$l['admin_log_user_social_groups_manage_categories_edit_category'] = "Edited Social Group Category # {2} ( {3} )";
-$l['admin_log_user_social_groups_create_group'] = "Created Social Group # {2} ( {3} )";
-$l['admin_log_user_social_groups_update_cache'] = "Updated Social Group Caches";
+// Admin Log stuff
+// Announcements
+$l['admin_log_socialgroups_announcements_announcements_add'] = "Created Socialgroups Announcement #{2} ({3})";
+$l['admin_log_socialgroups_announcements_announcements_edit'] = "Editted Socialgroups Announcement #{2} ({3})";
+$l['admin_log_socialgroups_announcements_announcements_delete'] = "Deleted Socialgroups Announcement #{2} ({3})";
+// Categories
+$l['admin_log_socialgroups_category_category_add'] = "Created Socialgroups Category #{2} ({3})";
+$l['admin_log_socialgroups_category_category_edit'] = "Edited Socialgroups Category #{2} ({3})";
+$l['admin_log_socialgroups_category_category_delete'] = "Deleted Socialgroups Category #{2} ({3})";
+$l['admin_log_socialgroups_category_category_merge'] = "Merged Socialgroups Categories #{2} & #{3} New Name: {4}";
+// Groups
+$l['admin_log_socialgroups_groups_groups_add'] = "Created Socialgroup #{2} ({3})";
+$l['admin_log_socialgroups_groups_groups_edit'] = "Edited Socialgroup #{2} ({3})";
+$l['admin_log_socialgroups_groups_groups_delete'] = "Deleted Socialgroup #{2} ({3})";
+
+// Leaders
+$l['admin_log_socialgroups_leaders_leaders_add'] = "Added Leader #{2} ({4}) to Group {3}";
+$l['admin_log_socialgroups_leaders_leaders_delete'] = "Deleted Leader #2 ({4}) from Group {3}";
+
+// Moderators
+$l['admin_log_socialgroups_moderators_moderators_add'] = "Added {3} as a Socialgroups Moderator. ID:{2}";
+$l['admin_log_socialgroups_moderators_moderators_delete'] = "Deleted {3} from Socialgroups Moderators. ID:{2}";
+
 $l['socialgroups_mycode'] = "Allow My Code";
 $l['socialgroups_allow_mycode'] = "Choose to allow mycode to be parsed or not.";
 $l['allow_groups_html'] = "Allow HTML";
