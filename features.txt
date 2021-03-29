@@ -4,6 +4,7 @@ Group CP
 - Manage Join Requests ( Group Leaders )
 - Add / Remove Members
 - Lock Group ( Moderators Only )
+- Manage Announcements
 
 Groups
 - Create Group Button 
@@ -34,65 +35,14 @@ Admin Modules
 - Category Management 
 - Moderator Management 
 - Global Announcements 
-- Admin Permissions 
+- Admin Permissions
 
-Moderator CP
-- Log moderator actions. 
+- Makes use Plugin Hooks
+- Developer documentation available on request which includes UML diagrams, Plugin Hooks and more.
+- Logs moderator and admin actions.
+- Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. 
 
-
-Plugin Hooks
-groups.php
-None at the moment
-
-showgroup.php
-None at the moment
-
-groupthread.php
-- groupthread_start
-- groupthread_post_post
-- groupthread_quickreply
-- groupthread_end
-
-groupcp.php
-None at the moment
-
-inc/plugins/socialgroups/classes/socialgroups.php
-- class_socialgroups_constructor
-- class_socialgroups_error
-- class_socialgroups_breadcrumb_link
-- class_socialgroups_load_group $groups[$gid]
-- class_socialgroups_load_group_no_cache $group
-- class_socialgroups_load_permissions $this->permissions[$gid]
-- class_socialgroups_list_groups $this->group_list[$group['cid']][$group['gid']]
-- class_socialgroups_render_group $subkey
-- class_socialgroups_get_viewable_categories $category
-- class_socialgroups_destructor
-
-inc/plugins/socialgroups/classes/socialgroupsdatahandler.php
-- class_socialgroupsdatahandler_save_fields
-- class_socialgroupsdatahandler_update_group
-- class_socialgroupsdatahandler_insert_group
-- class_socialgroupsdatahandler_delete_group
-
-inc/plugins/socialgroups/classes/socialgroupsthreadhandler.php
-- class_socialgroupsthreadhandler_insert_thread
-- class_socialgroupsthreadhandler_insert_post
-- class_socialgroupsthreadhandler_update_post
-- class_socialgroupsthreadhandler_delete_post
-- class_socialgroupsthreadhandler_delete_thread
-- class_socialgroupsthreadhandler_load_thread $thread
-- class_socialgroupsthreadhandler_load_post $post
-
-inc/plugins/socialgroups/classes/socialgroupsuserhandler.php
-- class_socialgroupsuserhandler_can_join $status
-- class_socialgroupsuserhandler_join_group
-- class_socialgroupsuserhandler_remove_member
-- class_socialgroupsuserhandler_add_leader
-- class_socialgroupsuserhandler_remove_leader
-
-Dynamic Class loading.  All class files in the inc/plugins/socialgroups/classes directory are autoloaded and assigned to $socialgroups. 
-
-Planned Features ( These are features not implented in this release, but will be in the future. )
+Planned Features ( These are features not implemented in this release, but will be in the future. )
 - Implement Invite Only
 - Custom CSS on a per group basis.
 - Ability to upload a group logo instead of just entering an url.
