@@ -19,11 +19,99 @@ $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
 $plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
 $plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
+$plugins->add_hook("admin_tools_get_admin_log_action", "socialgroups_admin_tools_get_admin_log_action");
 
 function socialgroups_admin_load()
 {
     global $lang;
     $lang->load("socialgroups");
+}
+
+function socialgroups_admin_tools_get_admin_log_action($plugin_array)
+{
+    // Announcements
+    if($plugin_array['logitem']['module'] == "socialgroups-announcements")
+    {
+        if($plugin_array['logitem']['data']['action'] == "announcements_add")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_announcements_announcements_add";
+        }
+        if($plugin_array['logitem']['data']['action'] == "announcements_edit")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_announcements_announcements_edit";
+        }
+        if($plugin_array['logitem']['data']['action'] == "announcements_delete")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_announcements_announcements_delete";
+        }
+    }
+
+    // Categories
+    if($plugin_array['logitem']['module'] == "socialgroups-category")
+    {
+        if($plugin_array['logitem']['data']['action'] == "category_add")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_category_category_add";
+        }
+        if($plugin_array['logitem']['data']['action'] == "category_edit")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_category_category_edit";
+        }
+        if($plugin_array['logitem']['data']['action'] == "category_delete")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_category_category_delete";
+        }
+        if($plugin_array['logitem']['data']['action'] == "category_merge")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_category_category_merge";
+        }
+    }
+
+    // Groups
+    if($plugin_array['logitem']['module'] == "socialgroups-groups")
+    {
+        if($plugin_array['logitem']['data']['action'] == "groups_add")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_groups_groups_add";
+        }
+        if($plugin_array['logitem']['data']['action'] == "groups_edit")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_groups_groups_edit";
+        }
+        if($plugin_array['logitem']['data']['action'] == "groups_delete")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_groups_groups_delete";
+        }
+    }
+
+    // Leaders
+    if($plugin_array['logitem']['module'] == "socialgroups-leaders")
+    {
+        if($plugin_array['logitem']['data']['action'] == "leaders_add")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_leaders_leaders_add";
+        }
+        if($plugin_array['logitem']['data']['action'] == "leaders_delete")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_leaders_leaders_delete";
+        }
+    }
+
+    // Moderators
+    if($plugin_array['logitem']['module'] == "socialgroups-moderators")
+    {
+        if($plugin_array['logitem']['data']['action'] == "moderators_add")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_moderators_moderators_add";
+        }
+        if($plugin_array['logitem']['data']['action'] == "moderators_delete")
+        {
+            $plugin_array['lang_string'] = "admin_log_socialgroups_moderators_moderators_delete";
+        }
+    }
+
+
+    return $plugin_array;
 }
 
 function socialgroups_global_start()
