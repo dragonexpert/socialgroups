@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 if(!defined("IN_MYBB"))
 {
@@ -74,14 +73,14 @@ switch($action)
 function socialgroups_announcements_browse()
 {
     global $socialgroups, $baseurl, $table;
-    $socialgroups->load_announcements(0, true);
+    $announcements = $socialgroups->load_announcements(0, true);
     $table->construct_header("Title");
     $table->construct_header("Text");
     $table->construct_header("Manage");
     $table->construct_row();
-    if(!empty($socialgroups->announcements))
+    if(!empty($announcements))
     {
-        foreach($socialgroups->announcements[0] as $announcement)
+        foreach($announcements as $announcement)
         {
             $table->construct_cell(htmlspecialchars($announcement['subject']));
             $table->construct_cell(htmlspecialchars($announcement['message']));
@@ -111,7 +110,9 @@ function socialgroups_announcement_add()
             "uid" => $mybb->user['uid'],
             "dateline" => TIME_NOW
         );
-        $db->insert_query("socialgroup_announcements", $new_announcement);
+        $aid = $db->insert_query("socialgroup_announcements", $new_announcement);
+        // Lang string admin_log_socialgroups_announcements_add
+        log_admin_action(array("action" => "announcements_add", "aid" => $aid, "name" => $new_announcement['subject']));
         flash_message("The announcement has been added.", "success");
         admin_redirect($baseurl);
     }
@@ -139,6 +140,8 @@ function socialgroups_announcement_edit(int $aid=0)
             "active" => $mybb->get_input("active", MyBB::INPUT_INT)
         );
         $db->update_query("socialgroup_announcements", $updated_announcement, "aid=$aid");
+        // Lang string admin_log_socialgroups_announcements_edit
+        log_admin_action(array("action" => "announcements_edit", "aid" => $aid, "name" => $updated_announcement['subject']));
         flash_message("The announcement has been updated.", "success");
         admin_redirect($baseurl);
     }
@@ -160,17 +163,22 @@ function socialgroups_announcement_edit(int $aid=0)
 function socialgroups_announcement_delete(int $aid=0)
 {
     global $mybb, $db, $baseurl;
+    $query = $db->simple_select("socialgroup_announcements", "*", "aid=" . $aid);
+    $announcement = $db->fetch_array($query);
     if($mybb->request_method == "post")
     {
         if($mybb->input['confirm'] == 1)
         {
             $db->delete_query("socialgroup_announcements", "aid=$aid");
+            // Lang string admin_log_socialgroups_announcements_delete
+            log_admin_action(array("action" => "announcements_delete", "aid" => $aid, "name" => $announcement['subject']));
             flash_message("The announcement has been deleted.","success");
         }
         admin_redirect($baseurl);
     }
     else
     {
+        echo "Announcement Subject: " . htmlspecialchars_uni($announcement['subject']) . "<br />Message: " . htmlspecialchars_uni($announcement['message']) . "<br /><br />";
         $form = new Form($baseurl . "&action=delete&aid=$aid", "post");
         $form_container = new FormContainer("Confirm Deletion");
         $form_container->output_row("Are you sure", "This cannot be undone.", $form->generate_yes_no_radio("confirm", 0));
