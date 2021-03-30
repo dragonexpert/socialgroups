@@ -1,6 +1,7 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
+ * This is not a free plugin.
  */
 
 /* This file handles all templates for Social Groups. Additional templates should be added at the bottom of socialgroups_insert_templates.*/
@@ -70,13 +71,18 @@ function socialgroups_insert_templates()
 
     require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
     // Use this area for modifying existing templates.
-    $indexquery = $db->simple_select("templates", "*", "title IN('header_welcomeblock_member')");
-    $indexdone = $usercpdone = false;
+    $indexquery = $db->simple_select("templates", "*", "title IN('header_welcomeblock_member','index')");
+    $welcomeblockdone = $indexdone = $usercpdone = false;
     while($template_info = $db->fetch_array($indexquery))
     {
-        if (!strpos($template_info['template'], "{\$socialgroupslink}") && $template_info['title'] == "header_welcomeblock_member" && !$indexdone)
+        if (!strpos($template_info['template'], "{\$socialgroupslink}") && $template_info['title'] == "header_welcomeblock_member" && !$welcomeblockdone)
         {
             find_replace_templatesets('header_welcomeblock_member', "#" . preg_quote('{$usercplink}') . "#i", "{\$usercplink}\n{\$socialgroupslink}");
+            $welcomeblockdone = true;
+        }
+        if (!strpos($template_info['template'], "{\$socialgroupslink}") && $template_info['title'] == "header_welcomeblock_member" && !$indexdone)
+        {
+            find_replace_templatesets('index', "#" . preg_quote('{$forums}') . "#i", "{\$forums}\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}");
             $indexdone = true;
         }
     }
@@ -92,4 +98,5 @@ function socialgroups_delete_templates()
     // Use this area for undoing template changes.
     require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
     find_replace_templatesets('header_welcomeblock_member', "#" . preg_quote("\n{\$socialgroupslink}") . "#i", '');
+    find_replace_templatesets('index', "#" . preg_quote("\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}") . "#i", '');
 }
