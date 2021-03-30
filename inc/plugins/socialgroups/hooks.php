@@ -18,6 +18,7 @@ $plugins->add_hook("admin_tools_get_admin_log_action", "socialgroups_admin_tools
 // Front End Stuff
 $plugins->add_hook("global_start", "socialgroups_global_start");
 $plugins->add_hook("global_intermediate", "socialgroups_global_intermediate");
+$plugins->add_hook("index_end", "socialgroups_index_end");
 $plugins->add_hook("modcp_modlogs_start", "socialgroups_modcp_modlogs_start");
 $plugins->add_hook("modcp_modlogs_result", "socialgroups_modcp_modlogs_result");
 $plugins->add_hook("postbit", "socialgroups_postbit");
@@ -159,6 +160,8 @@ function socialgroups_global_start()
     $groupzerogreater[] = "maxsocialgroups_create";
 //    $mybb->usergroup = usergroup_permissions($mybbgroups);
     $templatelist .= ",socialgroups_modcp_logitem,socialgroups_welcomeblock_member,socialgroups_welcomeblock_admin";
+    $templatelist .= ",socialgroups_category_split,socialgroups_group,socialgroups_group_lastpost_never,socialgroups_group_lastpost";
+    $templatelist .= ",socialgroups_logo,socialgroups_category";
 }
 
 function socialgroups_global_intermediate()
@@ -174,6 +177,17 @@ function socialgroups_global_intermediate()
         eval("\$socialgroupscplink = \"".$templates->get("socialgroups_welcomeblock_admin")."\";");
     }
     eval("\$socialgroupslink = \"".$templates->get("socialgroups_welcomeblock_member")."\";");
+}
+
+function socialgroups_index_end()
+{
+    global $socialgroups, $mybb, $mygroups;
+    $mygroups = "";
+    if($mybb->settings['socialgroups_groups_on_index'])
+    {
+        $socialgroups->list_groups(0, "", "", 50, 1, true);
+        $mygroups = $socialgroups->render_groups();
+    }
 }
 
 function socialgroups_admin_formcontainer_end()
