@@ -18,12 +18,13 @@ should be named socialgroups_(Hook_Name) because this way it will not intefere w
 - I prefer braces on their own line for control statements and functions / methods.  
 - Every control statement has an opening and closing brace even if it is just one line of code that goes there.
 - Please use $mybb->get_input over $mybb->input because if the offset is not specified, it can lead to warnings and errors depending on the PHP version. For strings you don't need to specify a second parameter.  For integers the second parameter should be MyBB::INPUT_INT.  Other valid types are MyBB::INPUT_FLOAT, MyBB::INPUT_BOOL, and MyBB::INPUT_ARRAY.  As you work on files, please try and fix these gradually.
-
+- If you are creating a new class, it cannot have the same name as a file in the forum main directory.  The name of the class needs to be the file name minus the extension.
 - Any database structure changes, please use db.php and edit the array $tables.  For the column type, use what the type would be in MySQL. The code is parsed through a function so it will be compatible with PGSQL and SQLite.
 
 **Bugs**
 - It is expected that there will be bugs early on.  Make sure to create an issue for them. Even better if you can do a Pull Request that resolves it.
 - If you don't have a solve for it, please list how to reproduce so I can verify whether I get that same issue on my site.
+- If you are having problems with class loading, there is now a public variable of the class socialgroups called $class_load_debug which contains information so you can track where things are going wrong.
 
 **Join Space**
 - If you would like to discuss the project or make contributions, you can join in on space [here](teamdimensional.jetbrains.space).  You could easily work on developing a plugin to extend socialgroups in this environment
