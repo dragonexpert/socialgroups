@@ -1,7 +1,6 @@
 <?php
 /**
  * Socialgroups plugin created by Mark Janssen.
- * This is not a free plugin.
  */
 if(!defined("IN_MYBB"))
 {
@@ -19,6 +18,7 @@ function socialgroups_meta()
     $sub_menu[50] = array("id" => "leaders", "title" => "Leaders", "link" => "index.php?module=socialgroups-leaders");
     $sub_menu[60] = array("id" => "templates", "title" => "Templates", "link" => "index.php?module=socialgroups-templates");
     $sub_menu[70] = array("id" => "restore", "title" => "Deleted Content", "link" => "index.php?module=socialgroups-restore");
+    $sub_menu[80] = array("id" => "hooks", "title" => "Hook Documentation", "link" => "index.php?module=socialgroups-hooks");
     $sub_menu = $plugins->run_hooks("admin_socialgroups_menu", $sub_menu);
     $plugincache = $cache->read("plugins");
     if(in_array("socialgroups", $plugincache['active']))
@@ -40,7 +40,8 @@ function socialgroups_action_handler($action)
         "moderators" => array("active" => "moderators", "file" => "moderators.php"),
         "leaders" => array("active" => "leaders", "file" => "leaders.php"),
         "templates" => array("active" => "templates", "file" => "templates.php"),
-        "restore" => array("active" => "restore", "file" => "restore.php")
+        "restore" => array("active" => "restore", "file" => "restore.php"),
+        "hooks" => array("active" => "hooks", "file" => "admin_hooks.php")
     );
 
     $actions = $plugins->run_hooks("admin_socialgroups_action_handler", $actions);
@@ -68,7 +69,8 @@ function socialgroups_admin_permissions()
         "moderators" => "Can Manage Social Group Moderators?",
         "leaders" => "Can Manage Social Group Leaders?",
         "templates" => "Can Manage Social Group Templates?",
-        "restore" => "Can Manage Deleted Content?"
+        "restore" => "Can Manage Deleted Content?",
+        "hooks" => "Can Manage Socialgroups Hook Documentation?"
     );
 
     $admin_permissions = $plugins->run_hooks("admin_socialgroups_permissions", $admin_permissions);
