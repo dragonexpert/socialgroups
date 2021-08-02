@@ -7,6 +7,12 @@ if(!defined("IN_MYBB"))
     die("Direct access not allowed.");
 }
 
+if(!$db->table_exists("socialgroups_documentation"))
+{
+    flash_message("You must import the documentation to use this module.  Please see developer documentation for more details.", "error");
+    admin_redirect("index.php?module=socialgroups");
+}
+
 $action = "browse";
 if($mybb->get_input("action"))
 {
