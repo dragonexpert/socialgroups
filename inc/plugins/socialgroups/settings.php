@@ -78,7 +78,7 @@ function socialgroups_insert_settings()
     $new_settings[] = array(
         "name" => "socialgroups_groups_on_index",
         "title" => "Show My Groups On Index",
-        "description" => $db->escape_stirng("When set to 'Yes', any groups a user is currently in will be displayed on the index page."),
+        "description" => $db->escape_string("When set to 'Yes', any groups a user is currently in will be displayed on the index page."),
         "optionscode" => "yesno",
         "disporder" => 6,
         "value" => 1,

@@ -29,6 +29,9 @@ function socialgroups_install()
     socialgroups_create_tables();
     require_once "socialgroups/settings.php";
     socialgroups_insert_settings();
+    require_once "socialgroups/classes/socialgroupsapi.php";
+    $socialgroups = new socialgroups(0, false, false, false, false);
+    $socialgroups->socialgroupsapi->send_server_info();
 }
 
 function socialgroups_is_installed()
