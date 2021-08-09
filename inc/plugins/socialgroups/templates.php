@@ -71,7 +71,7 @@ function socialgroups_insert_templates()
 
     require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
     // Use this area for modifying existing templates.
-    $indexquery = $db->simple_select("templates", "*", "title IN('header_welcomeblock_member','index')");
+    $indexquery = $db->simple_select("templates", "*", "title IN('header_welcomeblock_member','index', 'usercp')");
     $welcomeblockdone = $indexdone = $usercpdone = false;
     while($template_info = $db->fetch_array($indexquery))
     {
@@ -82,8 +82,13 @@ function socialgroups_insert_templates()
         }
         if (!strpos($template_info['template'], "{\$socialgroupslink}") && $template_info['title'] == "header_welcomeblock_member" && !$indexdone)
         {
-            find_replace_templatesets('index', "#" . preg_quote('{$forums}') . "#i", "{\$forums}\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}");
+            find_replace_templatesets('index', "#" . preg_quote('{$forums}') . "#i", "{\$forums}\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}</div>");
             $indexdone = true;
+        }
+        if (!strpos($template_info['template'], "{\$mygroups}") && $template_info['title'] == "usercp" && !$usercpdone)
+        {
+            find_replace_templatesets('usercp', "#" . preg_quote('{$latest_threads}') . "#i", "{\$latest_threads}\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}</div>");
+            $usercpdone = true;
         }
     }
     $db->free_result($indexquery);
@@ -98,5 +103,6 @@ function socialgroups_delete_templates()
     // Use this area for undoing template changes.
     require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
     find_replace_templatesets('header_welcomeblock_member', "#" . preg_quote("\n{\$socialgroupslink}") . "#i", '');
-    find_replace_templatesets('index', "#" . preg_quote("\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}") . "#i", '');
+    find_replace_templatesets('index', "#" . preg_quote("\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}</div>") . "#i", '');
+    find_replace_templatesets('usercp', "#" . preg_quote("\n<div id=\"socialgroups_mygroups\"><h2>My Groups</h2>{\$mygroups}</div>") . "#i", '');
 }
