@@ -25,6 +25,7 @@ $plugins->add_hook("postbit", "socialgroups_postbit");
 $plugins->add_hook("xmlhttp", "socialgroups_xmlhttp");
 $plugins->add_hook("fetch_wol_activity_end", "socialgroups_fetch_wol_activity_end");
 $plugins->add_hook("build_friendly_wol_location_end", "socialgroups_build_friendly_wol_location_end");
+$plugins->add_hook("usercp_end", "socialgroups_usercp_end");
 
 function socialgroups_admin_load()
 {
@@ -188,6 +189,13 @@ function socialgroups_index_end()
         $socialgroups->list_groups(0, "", "", 50, 1, true);
         $mygroups = $socialgroups->render_groups();
     }
+}
+
+function socialgroups_usercp_end()
+{
+    global $socialgroups, $mygroups;
+    $socialgroups->list_groups(0, "", "", 50, 1, true);
+    $mygroups = $socialgroups->render_groups();
 }
 
 function socialgroups_admin_formcontainer_end()
