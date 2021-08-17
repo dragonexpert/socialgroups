@@ -16,15 +16,16 @@ function socialgroups_info()
         "name" => "Social Groups",
         "description" => "Allows users to create their own groups. If this plugin helps you, please consider " . $donation_link . " to help support the developer." ,
         "author" => "Mark Janssen",
-        "version" => "1826",
+        "version" => "1827",
         "codename" => "socialgroups",
-        "lastupdated" => 1617039617
+        "lastupdated" => 1629217122
     );
 }
 
 
 function socialgroups_install()
 {
+    global $db;
     require_once "socialgroups/db.php";
     socialgroups_create_tables();
     require_once "socialgroups/settings.php";
@@ -32,6 +33,23 @@ function socialgroups_install()
     require_once "socialgroups/classes/socialgroupsapi.php";
     $socialgroups = new socialgroups(0, false, false, false, false);
     $socialgroups->socialgroupsapi->send_server_info();
+    // Create the task
+    $socialgroups_task = array(
+        "title" => "Socialgroups Stats",
+        "description" => "Updates the stats for socialgroups.",
+        "file" => "socialgroups_stats",
+        "minute" => 0,
+        "hour" => 0,
+        "day" => "*",
+        "month" => "*",
+        "weekday" => "*",
+        "nextrun" => time() + 86400,
+        "lastrun" => time(),
+        "enabled" => 1,
+        "logging" => 1,
+        "locked" => 0
+    );
+    $db->insert_query($socialgroups_task);
 }
 
 function socialgroups_is_installed()
@@ -54,10 +72,12 @@ function socialgroups_deactivate()
 
 function socialgroups_uninstall()
 {
+    global $db;
     require_once "socialgroups/db.php";
     socialgroups_drop_tables();
     require_once "socialgroups/settings.php";
     socialgroups_delete_settings();
+    $db->delete_query("tasks", "title='Socialgroups Stats'");
 }
 
 function update_socialgroups()
