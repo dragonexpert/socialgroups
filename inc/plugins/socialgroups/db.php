@@ -627,6 +627,11 @@ function socialgroups_create_tables()
     $db->update_query("usergroups", array("maxsocialgroups_create" => 0), "cancp=1");
     $db->update_query("usergroups", array("socialgroups_auto_approve" => 1), "cancp=1 OR canmodcp=1");
     $cache->update_usergroups();
+
+    // Statistics columns
+    $db->add_column("stats", "numgroups", "INT NOT NULL DEFAULT 0");
+    $db->add_column("stats", "numgroupthreads", "INT NOT NULL DEFAULT 0");
+    $db->add_column("stats", "numgroupposts", "INT NOT NULL DEFAULT 0");
 }
 
 function socialgroups_drop_tables()
@@ -649,7 +654,10 @@ function socialgroups_drop_tables()
         "maxsocialgroups_create" => "usergroups",
         "socialgroups_auto_approve" => "usergroups",
         "socialgroups_posts" => "users",
-        "socialgroups_threads" => "users"
+        "socialgroups_threads" => "users",
+        "numgroups" => "stats",
+        "numgroupthreads" => "stats",
+        "numgroupposts" => "stats"
     );
     foreach($columns as $column => $table)
     {
